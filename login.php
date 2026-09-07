@@ -3,7 +3,12 @@ $page_title = 'Login';
 require_once __DIR__ . '/includes/header.php';
 
 if (isLoggedIn()) {
-    header('Location: ' . SITE_URL . '/index.php');
+    // FIXED: Use absolute URL for logged-in users too
+    if (isAdmin()) {
+        header('Location: ' . SITE_URL . '/admin/index.php');
+    } else {
+        header('Location: ' . SITE_URL . '/index.php');
+    }
     exit();
 }
 
@@ -25,10 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['role'] = $user['role'];
 
             if ($user['role'] === 'admin') {
-                // Admins always go to dashboard
-                redirect('admin/index.php', 'Welcome back, Admin!', 'success');
+                // FIXED: Absolute URL prevents /dashboard/ redirect
+                header('Location: ' . SITE_URL . '/admin/index.php');
+                exit();
             } else {
-                // Users go to where they wanted, or home by default
                 $return_url = getReturnUrl();
                 redirect($return_url, 'Login successful!', 'success');
             }
