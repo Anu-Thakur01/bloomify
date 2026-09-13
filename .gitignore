@@ -1,2 +1,3 @@
 CREDENTIALS.md
 "*.log"  ".env" 
+database/backups/*.sql

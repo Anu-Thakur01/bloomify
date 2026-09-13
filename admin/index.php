@@ -6,8 +6,8 @@ require_once __DIR__ . '/includes/admin-header.php';
 // Fetch Dashboard Stats
 $stats_sql = "SELECT 
                 COUNT(*) as total_orders,
-                SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total_revenue,
-                SUM(CASE WHEN status IN ('pending', 'awaiting_payment') THEN 1 ELSE 0 END) as pending_orders,
+                SUM(CASE WHEN payment_status = 'success' THEN total_amount ELSE 0 END) as total_revenue,
+                SUM(CASE WHEN payment_status = 'pending' OR delivery_status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
                 (SELECT COUNT(*) FROM users WHERE role = 'user') as total_users
             FROM orders";
 $stats = $conn->query($stats_sql)->fetch_assoc();
@@ -79,7 +79,7 @@ $recent_orders = $conn->query($recent_orders_sql);
         <?php if ($recent_orders->num_rows > 0): ?>
             <?php while($order = $recent_orders->fetch_assoc()): 
                 // Safely format status for CSS class (e.g., "awaiting_payment" -> "badge-awaiting-payment")
-                $safe_status = strtolower(str_replace('_', '-', $order['status']));
+                $safe_status = strtolower(str_replace('_', '-', $order['delivery_status']));
                 $badge_class = 'badge-' . $safe_status;
             ?>
                 <tr>
@@ -89,7 +89,7 @@ $recent_orders = $conn->query($recent_orders_sql);
                     <td><?php echo htmlspecialchars($order['payment_method']); ?></td>
                     <td>
                         <span class="status-badge-sm <?php echo $badge_class; ?>">
-                            <?php echo ucfirst(str_replace('_', ' ', $order['status'])); ?>
+                            <?php echo ucfirst(str_replace('_', ' ', $order['delivery_status'])); ?>
                         </span>
                     </td>
                     <td style="color: #718096; font-size: 0.85rem;"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>

@@ -12,13 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $pay_status_update = "";
     if ($new_status === 'processing') {
         $pay_status_update = ", payment_status = 'pending'"; 
-    } elseif ($new_status === 'completed') {
-        $pay_status_update = ", payment_status = 'completed'";
-    } elseif ($new_status === 'cancelled') {
-        $pay_status_update = ", payment_status = 'cancelled'";
+    } elseif ($new_status === 'delivered') {
+        $pay_status_update = ", payment_status = 'success'";
     }
 
-    $sql = "UPDATE orders SET status = ? $pay_status_update WHERE id = ?";
+    $sql = "UPDATE orders SET delivery_status = ? $pay_status_update WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("si", $new_status, $order_id);
     
@@ -36,7 +34,7 @@ $sql = "SELECT o.*, u.name as user_name, u.email as user_email
         JOIN users u ON o.user_id = u.id";
 
 if ($filter !== 'all') {
-    $sql .= " WHERE o.status = ?";
+    $sql .= " WHERE o.delivery_status = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $filter);
     $stmt->execute();
@@ -125,11 +123,11 @@ if ($filter !== 'all') {
     <tbody>
         <?php if ($orders->num_rows > 0): ?>
             <?php while($order = $orders->fetch_assoc()): 
-                $safe_status = strtolower(str_replace('_', '-', $order['status']));
+                $safe_status = strtolower(str_replace('_', '-', $order['delivery_status']));
                 $badge_class = 'badge-' . $safe_status;
                 
-                $is_pending_cod = ($order['payment_method'] === 'Cash on Delivery' && $order['status'] === 'pending');
-                $is_completed = ($order['status'] === 'completed');
+                $is_pending_cod = ($order['payment_method'] === 'cod' && $order['delivery_status'] === 'pending');
+                $is_completed = ($order['delivery_status'] === 'delivered');
             ?>
                 <tr>
                     <td style="font-weight: 700; color: #2d6a4f;">#<?php echo htmlspecialchars($order['order_number']); ?></td>
@@ -139,7 +137,7 @@ if ($filter !== 'all') {
                     </td>
                     <td style="font-weight: 700;"><?php echo formatPrice($order['total_amount']); ?></td>
                     <td><?php echo htmlspecialchars($order['payment_method']); ?></td>
-                    <td><span class="status-badge-sm <?php echo $badge_class; ?>"><?php echo ucfirst(str_replace('_', ' ', $order['status'])); ?></span></td>
+                    <td><span class="status-badge-sm <?php echo $badge_class; ?>"><?php echo ucfirst(str_replace('_', ' ', $order['delivery_status'])); ?></span></td>
                     <td style="color: #718096; font-size: 0.85rem;"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
                     <td>
                         <?php if ($is_pending_cod): ?>
@@ -152,11 +150,11 @@ if ($filter !== 'all') {
                             </form>
                         <?php elseif ($is_completed): ?>
                             <div class="action-form">
-                                <span class="completed-badge">✓ Completed</span>
+                                    <span class="completed-badge">✓ Delivered</span>
                                 <form method="POST" class="action-form" style="margin-left: 10px;">
                                     <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                     <input type="hidden" name="new_status" value="cancelled">
-                                    <button type="submit" name="update_status" class="btn-cancel-sm" onclick="return confirm('Are you sure you want to CANCEL this completed order?');">
+                                    <button type="submit" name="update_status" class="btn-cancel-sm" onclick="return confirm('Are you sure you want to CANCEL this delivered order?');">
                                         Cancel
                                     </button>
                                 </form>
@@ -165,10 +163,10 @@ if ($filter !== 'all') {
                             <form method="POST" class="action-form">
                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                 <select name="new_status" class="status-select">
-                                    <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                    <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>Processing</option>
-                                    <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                    <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                                    <option value="pending" <?php echo $order['delivery_status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="processing" <?php echo $order['delivery_status'] === 'processing' ? 'selected' : ''; ?>>Processing</option>
+                                    <option value="delivered" <?php echo $order['delivery_status'] === 'delivered' ? 'selected' : ''; ?>>Delivered</option>
+                                    <option value="cancelled" <?php echo $order['delivery_status'] === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
                                 </select>
                                 <button type="submit" name="update_status" class="btn-update">Update</button>
                             </form>

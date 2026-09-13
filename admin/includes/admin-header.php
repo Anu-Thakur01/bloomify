@@ -15,7 +15,7 @@ $page_title = isset($page_title) ? $page_title . ' - Admin' : 'Admin Dashboard';
 
 <?php
 // Get new order count for notification badge
-$new_orders_sql = "SELECT COUNT(*) as cnt FROM orders WHERE status IN ('pending', 'awaiting_payment')";
+$new_orders_sql = "SELECT COUNT(*) as cnt FROM orders WHERE payment_status = 'pending' OR delivery_status = 'pending'";
 $new_orders_result = $conn->query($new_orders_sql);
 $new_orders_count = $new_orders_result->fetch_assoc()['cnt'];
 ?>

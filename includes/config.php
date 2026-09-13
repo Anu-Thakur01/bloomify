@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 
 // Site Configuration
 define('SITE_NAME', 'Bloomify');
-define('SITE_URL', 'http://localhost:8080/bloomify');
+define('SITE_URL', 'http://localhost/BLOOMIFY');
 
 // Start Session
 if (session_status() === PHP_SESSION_NONE) {

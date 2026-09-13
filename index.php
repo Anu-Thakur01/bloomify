@@ -66,7 +66,7 @@ $products = $conn->query($prod_sql);
     <div class="search-container">
         <form action="products.php" method="GET" class="search-form">
             <input type="text" name="search" placeholder="Search for roses, lilies, bouquets..." class="search-input">
-            <button type="submit" class="search-btn">🔍 Search</button>
+            <button type="submit" class="search-btn">Search</button>
         </form>
     </div>
 </div>

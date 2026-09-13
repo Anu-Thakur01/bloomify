@@ -20,6 +20,7 @@ require_once 'functions.php';
         <nav class="nav-links">
             <a href="<?php echo SITE_URL; ?>/index.php">Home</a>
             <a href="<?php echo SITE_URL; ?>/about.php">About Us</a>
+            <a href="<?php echo SITE_URL; ?>/contact.php">Contact</a>
     
             <?php if (isLoggedIn()): ?>
              <!-- NEW: My Orders Link -->
