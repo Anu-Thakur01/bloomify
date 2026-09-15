@@ -10,8 +10,8 @@ $order_id = (int)$_GET['id'];
 $user_id = $_SESSION['user_id'];
 
 // Only allow cancelling if order is 'pending' or 'awaiting_payment'
-$sql = "UPDATE orders SET status = 'cancelled', payment_status = 'cancelled' 
-        WHERE id = ? AND user_id = ? AND status IN ('pending', 'awaiting_payment')";
+$sql = "UPDATE orders SET delivery_status = 'cancelled', payment_status = 'failed' 
+    WHERE id = ? AND user_id = ? AND delivery_status = 'pending' AND payment_status = 'pending'";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $order_id, $user_id);
 

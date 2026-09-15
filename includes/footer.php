@@ -25,6 +25,7 @@
                     
                     <div class="footer-col">
                         <h4>ABOUT</h4>
+                        <a href="<?php echo SITE_URL; ?>/about.php">About Us</a>
                         <a href="<?php echo SITE_URL; ?>/about.php">Our Story</a>
                         <a href="#">Blog</a>
                         <a href="#">Careers</a>

@@ -39,12 +39,14 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT,
     order_number VARCHAR(50) UNIQUE NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
-    payment_method ENUM('esewa', 'cod') NOT NULL,
+    payment_method ENUM('esewa', 'khalti', 'cod') NOT NULL,
     payment_status ENUM('pending', 'success', 'failed') DEFAULT 'pending',
+    transaction_id VARCHAR(100),
     delivery_status ENUM('pending', 'processing', 'delivered', 'cancelled') DEFAULT 'pending',
     customer_name VARCHAR(100) NOT NULL,
     customer_phone VARCHAR(20) NOT NULL,
     customer_address TEXT NOT NULL,
+    archived TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
@@ -72,7 +74,7 @@ CREATE TABLE IF NOT EXISTS cart (
 );
 
 INSERT INTO users (name, email, password, phone, address, role) VALUES 
-('Admin', 'admin@bloomify.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '9800000000', 'Kathmandu, Nepal', 'admin');
+('Admin', 'admin@bloomify.com', '$2y$10$92IXUNpkj0rO0Q5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '9800000000', 'Kathmandu, Nepal', 'admin');
 
 INSERT INTO categories (name, description, image) VALUES 
 ('Roses', 'Beautiful rose bouquets', 'roses.jpg'),

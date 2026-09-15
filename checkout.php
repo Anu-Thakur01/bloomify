@@ -29,15 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $order_number = generateOrderNumber();
     $user_id = $_SESSION['user_id'];
 
-    // Determine initial status based on payment method
-    $initial_status = ($payment_method === 'Cash on Delivery') ? 'pending' : 'awaiting_payment';
-    $initial_pay_status = ($payment_method === 'Cash on Delivery') ? 'pending' : 'pending';
-
     // Insert Order
-    $sql = "INSERT INTO orders (user_id, order_number, total_amount, payment_method, payment_status, status, shipping_name, shipping_phone, shipping_address) 
+    $sql = "INSERT INTO orders (user_id, order_number, total_amount, payment_method, payment_status, delivery_status, customer_name, customer_phone, customer_address) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isdssssss", $user_id, $order_number, $cart_total, $payment_method, $initial_pay_status, $initial_status, $name, $phone, $address);
+    $initial_pay_status = 'pending';
+    $initial_delivery_status = 'pending';
+    $stmt->bind_param("isdssssss", $user_id, $order_number, $cart_total, $payment_method, $initial_pay_status, $initial_delivery_status, $name, $phone, $address);
     
     if ($stmt->execute()) {
         $order_id = $conn->insert_id;
@@ -54,24 +52,82 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Clear Cart
         clearCart();
 
-        // Store order info in session for payment gateways
+        // Store order info in session
         $_SESSION['pending_order'] = [
             'id' => $order_id,
             'order_number' => $order_number,
-            'total_amount' => $cart_total,
-            'shipping_name' => $name,
-            'shipping_phone' => $phone,
-            'shipping_address' => $address
+            'total_amount' => $cart_total
         ];
 
         // Redirect based on payment method
         if ($payment_method === 'eSewa') {
-            redirect('esewa-payment.php', '', '');
+            // ✅ OFFICIAL eSEWA TEST API URL (Requires POST)
+            $esewa_url = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+            
+            $amount = $cart_total;
+            $tax_amount = 0;
+            $total_amount = $cart_total;
+            $transaction_uuid = $order_number;
+            $product_code = 'EPAYTEST';
+            $product_service_charge = 0;
+            $product_delivery_charge = 0;
+            $success_url = SITE_URL . '/verify-esewa-payment.php';
+            $failure_url = SITE_URL . '/checkout.php?payment=cancelled';
+            $signed_field_names = 'total_amount,transaction_uuid,product_code';
+            
+            // Generate Signature (eSewa requires base64 encoded HMAC-SHA256)
+            $message = "total_amount={$total_amount},transaction_uuid={$transaction_uuid},product_code={$product_code}";
+            $signature = base64_encode(hash_hmac('sha256', $message, '8gBm/:&EnhH.1/q', true));
+
+            // Output an auto-submitting POST form
+            echo '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>Redirecting to eSewa...</title>
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding-top: 100px; background: #f8f9fa; }
+                    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #40916c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                </style>
+            </head>
+            <body>
+                <div class="loader"></div>
+                <h2>Redirecting to eSewa Secure Payment...</h2>
+                <p>Please wait, do not close this window.</p>
+                
+                <form id="esewa_form" action="' . htmlspecialchars($esewa_url) . '" method="POST">
+                    <input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">
+                    <input type="hidden" name="tax_amount" value="' . htmlspecialchars($tax_amount) . '">
+                    <input type="hidden" name="total_amount" value="' . htmlspecialchars($total_amount) . '">
+                    <input type="hidden" name="transaction_uuid" value="' . htmlspecialchars($transaction_uuid) . '">
+                    <input type="hidden" name="product_code" value="' . htmlspecialchars($product_code) . '">
+                    <input type="hidden" name="product_service_charge" value="' . htmlspecialchars($product_service_charge) . '">
+                    <input type="hidden" name="product_delivery_charge" value="' . htmlspecialchars($product_delivery_charge) . '">
+                    <input type="hidden" name="success_url" value="' . htmlspecialchars($success_url) . '">
+                    <input type="hidden" name="failure_url" value="' . htmlspecialchars($failure_url) . '">
+                    <input type="hidden" name="signed_field_names" value="' . htmlspecialchars($signed_field_names) . '">
+                    <input type="hidden" name="signature" value="' . htmlspecialchars($signature) . '">
+                </form>
+                
+                <script>
+                    // Automatically submit the form to eSewa via POST
+                    document.getElementById("esewa_form").submit();
+                </script>
+            </body>
+            </html>';
+            exit();
+            
         } elseif ($payment_method === 'Khalti') {
-            redirect('khalti-payment.php', '', '');
+            $_SESSION['khalti_order'] = [
+                'order_id' => $order_id,
+                'order_number' => $order_number,
+                'amount' => $cart_total * 100
+            ];
+            redirect('khalti-checkout.php', '', '');
+            
         } else {
-            // COD goes directly to success
-            redirect('payment-success.php?order=' . $order_number . '&method=Cash on Delivery', 'Order placed successfully!', 'success');
+            // COD - Direct success
+            redirect('payment-success.php?order=' . $order_number . '&method=Cash on Delivery', 'Order placed successfully! Please pay on delivery.', 'success');
         }
     } else {
         redirect('checkout.php', 'Failed to place order. Please try again.', 'danger');
@@ -79,35 +135,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 
+<!-- Keep your exact original HTML/CSS below this line -->
 <style>
     .checkout-container { max-width: 1000px; margin: 40px auto; padding: 20px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
     .checkout-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
     .checkout-title { font-size: 1.5rem; color: #2d6a4f; margin-bottom: 25px; font-weight: 700; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
-    
     .form-group-checkout { margin-bottom: 20px; }
     .form-group-checkout label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 0.95rem; }
     .form-control-checkout { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s; }
     .form-control-checkout:focus { outline: none; border-color: #40916c; box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.1); }
-    
     .payment-methods { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
     .payment-option { display: flex; align-items: center; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
     .payment-option:hover { border-color: #40916c; background: #f8f9fa; }
     .payment-option input { margin-right: 15px; transform: scale(1.2); accent-color: #40916c; }
     .payment-option label { margin: 0; cursor: pointer; font-weight: 600; color: #2d3748; flex: 1; display: flex; align-items: center; gap: 15px; }
     .payment-option img { height: 35px; object-fit: contain; }
-    
     .summary-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
     .summary-item:last-child { border-bottom: none; }
     .summary-total { display: flex; justify-content: space-between; padding-top: 20px; margin-top: 10px; border-top: 2px solid #2d6a4f; font-size: 1.3rem; font-weight: 800; color: #2d6a4f; }
-    
     .btn-place-order { width: 100%; padding: 16px; background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
     .btn-place-order:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(64, 145, 108, 0.3); }
-    
+    .payment-notice { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; color: #856404; }
     @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
 </style>
 
 <div class="checkout-container">
-    <!-- Left Side: Shipping & Payment -->
     <div class="checkout-box">
         <h2 class="checkout-title">Shipping Details</h2>
         <form method="POST" action="checkout.php">
@@ -125,6 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
 
             <h2 class="checkout-title" style="margin-top: 30px;">Payment Method</h2>
+            <div class="payment-notice">
+                <strong>🔒 Secure Payment:</strong> You will be redirected to the official eSewa payment gateway. Your data is encrypted and secure.
+            </div>
             <div class="payment-methods">
                 <div class="payment-option">
                     <input type="radio" id="esewa" name="payment_method" value="eSewa" required>
@@ -148,12 +203,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </label>
                 </div>
             </div>
-
             <button type="submit" class="btn-place-order">Place Order</button>
         </form>
     </div>
 
-    <!-- Right Side: Order Summary -->
     <div class="checkout-box" style="height: fit-content;">
         <h2 class="checkout-title">Order Summary</h2>
         <?php foreach ($cart_items as $item): ?>
@@ -165,7 +218,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div style="font-weight: 700; color: #40916c;"><?php echo formatPrice($item['subtotal']); ?></div>
             </div>
         <?php endforeach; ?>
-        
         <div class="summary-total">
             <span>Total Amount</span>
             <span><?php echo formatPrice($cart_total); ?></span>

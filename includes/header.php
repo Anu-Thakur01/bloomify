@@ -19,12 +19,12 @@ require_once 'functions.php';
         </a>
         <nav class="nav-links">
             <a href="<?php echo SITE_URL; ?>/index.php">Home</a>
-            <a href="<?php echo SITE_URL; ?>/about.php">About Us</a>
             <a href="<?php echo SITE_URL; ?>/contact.php">Contact</a>
     
             <?php if (isLoggedIn()): ?>
-             <!-- NEW: My Orders Link -->
+            <?php if (!isAdmin()): ?>
             <a href="<?php echo SITE_URL; ?>/my-orders.php">My Orders</a>
+            <?php endif; ?>
         
             <?php if (isAdmin()): ?>
             <a href="<?php echo SITE_URL; ?>/admin/index.php">Admin Dashboard</a>
@@ -32,7 +32,9 @@ require_once 'functions.php';
             <a href="<?php echo SITE_URL; ?>/profile.php">My Profile</a>
             <?php endif; ?>
         
+            <?php if (!isAdmin()): ?>
             <a href="<?php echo SITE_URL; ?>/cart.php">Cart (<?php echo getCartCount(); ?>)</a>
+            <?php endif; ?>
             <a href="<?php echo SITE_URL; ?>/logout.php">Logout</a>
             <?php else: ?>
             <a href="<?php echo SITE_URL; ?>/login.php">Login</a>

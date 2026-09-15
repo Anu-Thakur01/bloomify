@@ -26,6 +26,7 @@ $orders = $stmt->get_result();
     .order-card.status-pending { border-left-color: #ffc107; }
     .order-card.status-processing { border-left-color: #17a2b8; }
     .order-card.status-completed { border-left-color: #28a745; }
+    .order-card.status-delivered { border-left-color: #28a745; }
     .order-card.status-cancelled { border-left-color: #dc3545; opacity: 0.8; }
     
     .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
@@ -41,6 +42,7 @@ $orders = $stmt->get_result();
     .badge-pending { background: #fff3cd; color: #856404; }
     .badge-processing { background: #d1ecf1; color: #0c5460; }
     .badge-completed { background: #d4edda; color: #155724; }
+    .badge-delivered { background: #d4edda; color: #155724; }
     .badge-cancelled { background: #f8d7da; color: #721c24; }
     
     .payment-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; }
@@ -100,16 +102,17 @@ $orders = $stmt->get_result();
             $count_stmt->execute();
             $item_count = $count_stmt->get_result()->fetch_assoc()['cnt'];
             
-            $status_class = 'status-' . $order['status'];
-            $badge_class = 'badge-' . $order['status'];
+            $delivery_status = $order['delivery_status'];
+            $status_class = 'status-' . $delivery_status;
+            $badge_class = 'badge-' . $delivery_status;
             
             $pay_class = '';
-            if ($order['payment_method'] == 'eSewa') $pay_class = 'pay-esewa';
-            elseif ($order['payment_method'] == 'Khalti') $pay_class = 'pay-khalti';
+            if ($order['payment_method'] == 'esewa') $pay_class = 'pay-esewa';
+            elseif ($order['payment_method'] == 'khalti') $pay_class = 'pay-khalti';
             else $pay_class = 'pay-cod';
             
-            $can_cancel = in_array($order['status'], ['pending', 'awaiting_payment']);
-            $can_archive = in_array($order['status'], ['completed', 'cancelled']);
+            $can_cancel = $delivery_status === 'pending' && $order['payment_status'] === 'pending';
+            $can_archive = in_array($delivery_status, ['delivered', 'cancelled']);
         ?>
             <div class="order-card <?php echo $status_class; ?>">
                 <div class="order-header">
@@ -118,7 +121,7 @@ $orders = $stmt->get_result();
                         <div class="order-date"><?php echo date('M d, Y - h:i A', strtotime($order['created_at'])); ?></div>
                     </div>
                     <span class="status-badge <?php echo $badge_class; ?>">
-                        <?php echo ucfirst($order['status']); ?>
+                        <?php echo ucfirst($delivery_status); ?>
                     </span>
                 </div>
                 

@@ -10,7 +10,9 @@ Run `backup.bat` after making database changes. It exports the current database 
 database/backups/bloomify-YYYYMMDD-HHMMSS.sql
 ```
 
-The backup includes tables and current data. The project schema and seed data remain in `bloomify.sql`.
+The backup includes tables and current data. The safe project schema and demo seed data are in `database/bloomify.sql`.
+
+The schema file is suitable for Git because it contains only table definitions and demo data. Do not place real users, orders, payment details, or production passwords in it.
 
 ## Restore a backup
 

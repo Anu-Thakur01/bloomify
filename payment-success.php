@@ -76,7 +76,7 @@ if (!$order) {
             <div class="receipt-row">
                 <span class="receipt-label">Current Status</span>
                 <!-- Dynamically shows "Completed" because the database was updated -->
-                <span class="receipt-value" style="color: #2d6a4f; text-transform: capitalize;">✓ <?php echo str_replace('_', ' ', $order['status']); ?></span>
+                <span class="receipt-value" style="color: #2d6a4f; text-transform: capitalize;">✓ <?php echo str_replace('_', ' ', $order['delivery_status']); ?></span>
             </div>
         </div>
         

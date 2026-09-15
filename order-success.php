@@ -89,8 +89,8 @@ $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <span class="order-detail-label">Payment</span>
                 <?php
                 $payment_class = '';
-                if ($order['payment_method'] == 'eSewa') $payment_class = 'payment-esewa';
-                elseif ($order['payment_method'] == 'Khalti') $payment_class = 'payment-khalti';
+                if ($order['payment_method'] == 'esewa') $payment_class = 'payment-esewa';
+                elseif ($order['payment_method'] == 'khalti') $payment_class = 'payment-khalti';
                 else $payment_class = 'payment-cod';
                 ?>
                 <span class="payment-badge <?php echo $payment_class; ?>">

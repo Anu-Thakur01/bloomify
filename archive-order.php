@@ -10,7 +10,7 @@ $order_id = (int)$_GET['id'];
 $user_id = $_SESSION['user_id'];
 
 // Only allow archiving completed/cancelled orders (not active ones)
-$sql = "UPDATE orders SET archived = 1 WHERE id = ? AND user_id = ? AND status IN ('completed', 'cancelled')";
+$sql = "UPDATE orders SET archived = 1 WHERE id = ? AND user_id = ? AND delivery_status IN ('delivered', 'cancelled')";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $order_id, $user_id);
 
