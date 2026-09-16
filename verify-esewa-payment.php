@@ -40,13 +40,17 @@ if (isset($_REQUEST['data'])) {
         $is_success = (strtoupper($status) === 'COMPLETE');
         
         if ($is_success) {
-            // ✅ Update order status - matches your DB enum ('success' not 'completed')
+            // ✅ 1. Update order status in database
             $stmt = $conn->prepare("UPDATE orders SET payment_status = 'success', delivery_status = 'processing', transaction_id = ? WHERE order_number = ?");
             $stmt->bind_param("ss", $transaction_code, $order_number);
             $stmt->execute();
             
-            // Redirect to success page
+            // ✅ 2. Clear cart ONLY after successful payment verification
+            clearCart();
+            
+            // ✅ 3. Redirect to success page
             redirect('payment-success.php?order=' . $order_number . '&method=eSewa&txn=' . $transaction_code, 'Payment successful! Your order has been confirmed.', 'success');
+            
         } else {
             // Payment failed or cancelled
             $stmt = $conn->prepare("UPDATE orders SET payment_status = 'failed' WHERE order_number = ?");

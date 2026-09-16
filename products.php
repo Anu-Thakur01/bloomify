@@ -6,8 +6,8 @@ require_once __DIR__ . '/includes/header.php';
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
 $category_id = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 
-// Build SQL query
-$sql = "SELECT p.*, c.name as category_name 
+// Build SQL query - NO LIMIT (shows all products)
+$sql = "SELECT p.id, p.name, p.price, p.stock, p.stock_quantity, p.image, p.status, p.category_id, c.name as category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
         WHERE p.status = 'active'";
@@ -39,7 +39,7 @@ $stmt->execute();
 $products = $stmt->get_result();
 
 // Fetch categories for filter dropdown
-$categories_sql = "SELECT * FROM categories ORDER BY name";
+$categories_sql = "SELECT id, name FROM categories ORDER BY name ASC";
 $categories = $conn->query($categories_sql);
 ?>
 
@@ -65,18 +65,16 @@ $categories = $conn->query($categories_sql);
     .results-count a:hover { color: #2d6a4f; text-decoration: underline; }
     
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
-    .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; }
-    .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #f0f0f0; }
+    .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(45, 106, 79, 0.12); border-color: #40916c; }
     .product-img { height: 220px; background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #40916c; overflow: hidden; }
     .product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
     .product-card:hover .product-img img { transform: scale(1.05); }
-    .product-info { padding: 20px; }
+    .product-info { padding: 20px; display: flex; flex-direction: column; }
     .product-name { font-size: 1.05rem; font-weight: 700; color: #2d3748; margin-bottom: 8px; line-height: 1.4; }
     .product-category { font-size: 0.85rem; color: #6c757d; margin-bottom: 10px; }
-    .product-price { font-size: 1.3rem; color: #40916c; font-weight: 800; margin-bottom: 12px; }
+    .product-price { font-size: 1.3rem; color: #2d6a4f; font-weight: 800; margin-bottom: 12px; }
     .product-stock { font-size: 0.85rem; color: #6c757d; margin-bottom: 15px; }
-    .btn-view { width: 100%; padding: 10px; background: #40916c; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; transition: all 0.3s; }
-    .btn-view:hover { background: #2d6a4f; transform: translateY(-2px); }
     
     .no-results { text-align: center; padding: 60px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
     .no-results h3 { color: #2d6a4f; margin-bottom: 15px; font-size: 1.5rem; }
@@ -114,7 +112,7 @@ $categories = $conn->query($categories_sql);
                         <input type="hidden" name="category" value="<?php echo $category_id; ?>">
                     <?php endif; ?>
                     <input type="text" name="search" placeholder="Search flowers..." value="<?php echo htmlspecialchars($search); ?>">
-                    <button type="submit">🔍</button>
+                    <button type="submit"></button>
                 </form>
             </div>
             
@@ -139,7 +137,12 @@ $categories = $conn->query($categories_sql);
         </div>
         
         <div class="results-count">
-            <a href="index.php">← Back to Home</a>
+            <?php if ($category_id > 0): ?>
+                <a href="categories.php">← Back to Categories</a>
+            <?php else: ?>
+                <a href="index.php">← Back to Home</a>
+            <?php endif; ?>
+            
             <span>Showing <strong><?php echo $products->num_rows; ?></strong> product<?php echo ($products->num_rows != 1) ? 's' : ''; ?></span>
             <?php if (!empty($search) || $category_id > 0): ?>
                 <span>|</span>
@@ -154,7 +157,7 @@ $categories = $conn->query($categories_sql);
                 <div class="product-card">
                     <div class="product-img">
                         <?php if (!empty($product['image'])): ?>
-                            <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                            <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" onerror="this.parentElement.innerHTML=''">
                         <?php else: ?>
                             🌸
                         <?php endif; ?>
@@ -165,14 +168,57 @@ $categories = $conn->query($categories_sql);
                             <div class="product-category"><?php echo htmlspecialchars($product['category_name']); ?></div>
                         <?php endif; ?>
                         <div class="product-price"><?php echo formatPrice($product['price']); ?></div>
+                        
+                        <!-- ✅ STOCK DISPLAY -->
                         <div class="product-stock">
-                            <?php if($product['stock_quantity'] > 0): ?>
-                                <span style="color: #2d6a4f; font-weight: 600;">✓ In Stock (<?php echo $product['stock_quantity']; ?>)</span>
+                            <?php 
+                            $stock_qty = (int)($product['stock'] ?? $product['stock_quantity'] ?? 0);
+                            if ($stock_qty > 0): ?>
+                                <span style="color: #2d6a4f; font-weight: 600;">✓ In Stock (<?php echo $stock_qty; ?>)</span>
                             <?php else: ?>
-                                <span style="color: #d90429;"> Out of Stock</span>
+                                <span style="color: #d90429; font-weight: 600;">✕ Out of Stock</span>
                             <?php endif; ?>
                         </div>
-                        <a href="product-details.php?id=<?php echo $product['id']; ?>" class="btn-view">View Details</a>
+                        
+                        <!-- ✅ NEW BUTTON LAYOUT -->
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Top Row: Cart + Wishlist -->
+                            <div style="display: flex; gap: 8px;">
+                                <form method="POST" action="add-to-cart.php" style="flex: 1; margin: 0;">
+                                    <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" name="add_to_cart" style="width: 100%; padding: 10px; background: #40916c; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
+                                         Cart
+                                    </button>
+                                </form>
+                                
+                                <?php if (isLoggedIn()): ?>
+                                    <?php
+                                    $check_sql = "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?";
+                                    $check_stmt = $conn->prepare($check_sql);
+                                    $check_stmt->bind_param("ii", $_SESSION['user_id'], $product['id']);
+                                    $check_stmt->execute();
+                                    $in_wishlist = $check_stmt->get_result()->num_rows > 0;
+                                    ?>
+                                    <form method="POST" action="wishlist-action.php" style="margin: 0;">
+                                        <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                        <input type="hidden" name="action" value="<?php echo $in_wishlist ? 'remove' : 'add'; ?>">
+                                        <button type="submit" style="width: 45px; height: 38px; background: <?php echo $in_wishlist ? '#fee2e2' : 'white'; ?>; color: <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border: 2px solid <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border-radius: 6px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+                                            <?php echo $in_wishlist ? '❤️' : '♡'; ?>
+                                        </button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="login.php" style="width: 45px; height: 38px; background: white; color: #2d6a4f; border: 2px solid #2d6a4f; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; text-decoration: none;">
+                                        ♡
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <!-- Bottom Row: View Details -->
+                            <a href="product-details.php?id=<?php echo $product['id']; ?>" style="width: 100%; padding: 10px; background: white; color: #2d6a4f; border: 2px solid #40916c; border-radius: 6px; font-weight: 600; text-align: center; text-decoration: none; font-size: 0.9rem; display: block; box-sizing: border-box;">
+                                View Details
+                            </a>
+                        </div>
                     </div>
                 </div>
             <?php endwhile; ?>
@@ -182,7 +228,7 @@ $categories = $conn->query($categories_sql);
             <div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>
             <h3>No Products Found</h3>
             <p>We couldn't find any products matching your search criteria.</p>
-            <a href="products.php" class="btn btn-primary" style="width: auto; padding: 12px 30px;">View All Products</a>
+            <a href="products.php" style="display: inline-block; padding: 12px 30px; background: #40916c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;">View All Products</a>
         </div>
     <?php endif; ?>
 </div>

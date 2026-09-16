@@ -49,10 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt_item->execute();
         }
 
-        // Clear Cart
-        clearCart();
-
-        // Store order info in session
+        // Store order info in session for payment gateways
         $_SESSION['pending_order'] = [
             'id' => $order_id,
             'order_number' => $order_number,
@@ -61,9 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Redirect based on payment method
         if ($payment_method === 'eSewa') {
-            // ✅ OFFICIAL eSEWA TEST API URL (Requires POST)
             $esewa_url = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
-            
             $amount = $cart_total;
             $tax_amount = 0;
             $total_amount = $cart_total;
@@ -75,11 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $failure_url = SITE_URL . '/checkout.php?payment=cancelled';
             $signed_field_names = 'total_amount,transaction_uuid,product_code';
             
-            // Generate Signature (eSewa requires base64 encoded HMAC-SHA256)
             $message = "total_amount={$total_amount},transaction_uuid={$transaction_uuid},product_code={$product_code}";
             $signature = base64_encode(hash_hmac('sha256', $message, '8gBm/:&EnhH.1/q', true));
 
-            // Output an auto-submitting POST form
             echo '<!DOCTYPE html>
             <html>
             <head>
@@ -94,7 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="loader"></div>
                 <h2>Redirecting to eSewa Secure Payment...</h2>
                 <p>Please wait, do not close this window.</p>
-                
                 <form id="esewa_form" action="' . htmlspecialchars($esewa_url) . '" method="POST">
                     <input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">
                     <input type="hidden" name="tax_amount" value="' . htmlspecialchars($tax_amount) . '">
@@ -108,11 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="hidden" name="signed_field_names" value="' . htmlspecialchars($signed_field_names) . '">
                     <input type="hidden" name="signature" value="' . htmlspecialchars($signature) . '">
                 </form>
-                
-                <script>
-                    // Automatically submit the form to eSewa via POST
-                    document.getElementById("esewa_form").submit();
-                </script>
+                <script>document.getElementById("esewa_form").submit();</script>
             </body>
             </html>';
             exit();
@@ -127,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
         } else {
             // COD - Direct success
+            clearCart();
             redirect('payment-success.php?order=' . $order_number . '&method=Cash on Delivery', 'Order placed successfully! Please pay on delivery.', 'success');
         }
     } else {
@@ -135,32 +124,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 
-<!-- Keep your exact original HTML/CSS below this line -->
 <style>
     .checkout-container { max-width: 1000px; margin: 40px auto; padding: 20px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
     .checkout-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
     .checkout-title { font-size: 1.5rem; color: #2d6a4f; margin-bottom: 25px; font-weight: 700; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+    
+    /* ✅ NEW: Back to Cart Button Style */
+    .btn-back-cart { 
+        display: inline-flex; align-items: center; gap: 6px; color: #6c757d; 
+        text-decoration: none; font-weight: 600; font-size: 0.95rem; margin-bottom: 15px; 
+        transition: all 0.3s; 
+    }
+    .btn-back-cart:hover { color: #2d6a4f; transform: translateX(-4px); }
+
     .form-group-checkout { margin-bottom: 20px; }
     .form-group-checkout label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 0.95rem; }
     .form-control-checkout { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s; }
     .form-control-checkout:focus { outline: none; border-color: #40916c; box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.1); }
+    
     .payment-methods { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
     .payment-option { display: flex; align-items: center; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
     .payment-option:hover { border-color: #40916c; background: #f8f9fa; }
     .payment-option input { margin-right: 15px; transform: scale(1.2); accent-color: #40916c; }
     .payment-option label { margin: 0; cursor: pointer; font-weight: 600; color: #2d3748; flex: 1; display: flex; align-items: center; gap: 15px; }
     .payment-option img { height: 35px; object-fit: contain; }
+    
     .summary-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
     .summary-item:last-child { border-bottom: none; }
     .summary-total { display: flex; justify-content: space-between; padding-top: 20px; margin-top: 10px; border-top: 2px solid #2d6a4f; font-size: 1.3rem; font-weight: 800; color: #2d6a4f; }
+    
     .btn-place-order { width: 100%; padding: 16px; background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
     .btn-place-order:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(64, 145, 108, 0.3); }
-    .payment-notice { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; color: #856404; }
+    
     @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
 </style>
 
 <div class="checkout-container">
     <div class="checkout-box">
+        <!-- ✅ BACK TO CART BUTTON -->
+        <a href="cart.php" class="btn-back-cart">← Back </a>
+        
         <h2 class="checkout-title">Shipping Details</h2>
         <form method="POST" action="checkout.php">
             <div class="form-group-checkout">
@@ -177,9 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
 
             <h2 class="checkout-title" style="margin-top: 30px;">Payment Method</h2>
-            <div class="payment-notice">
-                <strong>🔒 Secure Payment:</strong> You will be redirected to the official eSewa payment gateway. Your data is encrypted and secure.
-            </div>
+            
             <div class="payment-methods">
                 <div class="payment-option">
                     <input type="radio" id="esewa" name="payment_method" value="eSewa" required>
@@ -203,6 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </label>
                 </div>
             </div>
+            
             <button type="submit" class="btn-place-order">Place Order</button>
         </form>
     </div>
