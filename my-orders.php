@@ -91,7 +91,7 @@ $orders = $stmt->get_result();
 </style>
 
 <div class="orders-container">
-    <h1 class="orders-title">My Orders 📦</h1>
+    <h1 class="orders-title">My Orders </h1>
     
     <?php if ($orders->num_rows > 0): ?>
         <?php while($order = $orders->fetch_assoc()): 

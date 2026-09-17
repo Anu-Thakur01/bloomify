@@ -14,6 +14,7 @@ if (isset($_POST['add_product'])) {
     $name = sanitize($_POST['name']);
     $category_id = (int)$_POST['category_id'];
     $price = (float)$_POST['price'];
+    $discount_percentage = (int)($_POST['discount_percentage'] ?? 0);
     $stock = (int)($_POST['stock'] ?? 0);
     $description = sanitize($_POST['description']);
     $status = sanitize($_POST['status']);
@@ -29,10 +30,10 @@ if (isset($_POST['add_product'])) {
         }
     }
 
-    $sql = "INSERT INTO products (name, category_id, price, stock_quantity, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO products (name, category_id, price, discount_percentage, stock_quantity, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sidisss", $name, $category_id, $price, $stock, $description, $image_name, $status);
-    
+    $stmt->bind_param("sidiisss", $name, $category_id, $price, $discount_percentage, $stock, $description, $image_name, $status);
+
     if ($stmt->execute()) {
         $message = "Product added successfully!";
         $message_type = "success";
@@ -48,6 +49,7 @@ if (isset($_POST['edit_product'])) {
     $name = sanitize($_POST['name']);
     $category_id = (int)$_POST['category_id'];
     $price = (float)$_POST['price'];
+    $discount_percentage = (int)($_POST['discount_percentage'] ?? 0);
     $stock = (int)($_POST['stock'] ?? 0);
     $description = sanitize($_POST['description']);
     $status = sanitize($_POST['status']);
@@ -66,10 +68,10 @@ if (isset($_POST['edit_product'])) {
         }
     }
 
-    $sql = "UPDATE products SET name = ?, category_id = ?, price = ?, stock_quantity = ?, description = ?, image = ?, status = ? WHERE id = ?";
+    $sql = "UPDATE products SET name = ?, category_id = ?, price = ?, discount_percentage = ?, stock_quantity = ?, description = ?, image = ?, status = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sidisssi", $name, $category_id, $price, $stock, $description, $image_name, $status, $id);
-    
+    $stmt->bind_param("sidiisssi", $name, $category_id, $price, $discount_percentage, $stock, $description, $image_name, $status, $id);
+
     if ($stmt->execute()) {
         $message = "Product updated successfully!";
         $message_type = "success";
@@ -82,7 +84,7 @@ if (isset($_POST['edit_product'])) {
 // 3. DELETE PRODUCT
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    
+
     $stmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -92,7 +94,7 @@ if (isset($_GET['delete'])) {
         if ($product['image'] !== 'default-flower.jpg' && file_exists($upload_dir . $product['image'])) {
             unlink($upload_dir . $product['image']);
         }
-        
+
         $del_stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
         $del_stmt->bind_param("i", $id);
         if ($del_stmt->execute()) {
@@ -133,36 +135,29 @@ $show_form = isset($_GET['add']) || $edit_product || ($message_type === 'danger'
 <style>
     .btn-back { display: inline-flex; align-items: center; gap: 8px; color: #6c757d; text-decoration: none; font-weight: 600; font-size: 0.95rem; margin-bottom: 15px; transition: all 0.3s; }
     .btn-back:hover { color: #2d6a4f; transform: translateX(-4px); }
-    
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     .btn-add { background: #2d6a4f; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; border: none; cursor: pointer; }
     .btn-add:hover { background: #1b4332; transform: translateY(-2px); }
-    
-    .form-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; display: <?php echo $show_form ? 'block' : 'none'; ?>; animation: fadeIn 0.3s ease; }
+    .form-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); margin-bottom: 30px; display: <?php echo $show_form ? 'block' : 'none'; ?>; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 600; color: #4a5568; margin-bottom: 6px; font-size: 0.9rem; }
     .form-control { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; transition: border 0.3s; box-sizing: border-box; }
     .form-control:focus { outline: none; border-color: #2d6a4f; }
     textarea.form-control { resize: vertical; min-height: 80px; }
-    
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
     .btn-cancel { background: #f8f9fa; color: #4a5568; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 1px solid #e2e8f0; cursor: pointer; }
     .btn-save { background: #2d6a4f; color: white; padding: 10px 24px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
     .btn-save:hover { background: #1b4332; }
-
     .product-img-sm { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
     .btn-action { padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; margin-right: 5px; display: inline-block; }
     .btn-edit { background: #dbeafe; color: #1e40af; }
     .btn-edit:hover { background: #bfdbfe; }
     .btn-delete { background: #fee2e2; color: #991b1b; }
     .btn-delete:hover { background: #fecaca; }
-    
     .status-active { color: #065f46; background: #d1fae5; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
     .status-inactive { color: #991b1b; background: #fee2e2; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-
     @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
 </style>
 
@@ -192,7 +187,7 @@ $show_form = isset($_GET['add']) || $edit_product || ($message_type === 'danger'
             <input type="hidden" name="product_id" value="<?php echo $edit_product['id']; ?>">
             <input type="hidden" name="current_image" value="<?php echo htmlspecialchars($edit_product['image'] ?? 'default-flower.jpg'); ?>">
         <?php endif; ?>
-        
+
         <div class="form-grid">
             <div class="form-group">
                 <label>Product Name *</label>
@@ -202,15 +197,15 @@ $show_form = isset($_GET['add']) || $edit_product || ($message_type === 'danger'
                 <label>Category *</label>
                 <select name="category_id" class="form-control" required>
                     <option value="">-- Select Category --</option>
-                    <?php 
+                    <?php
                     if ($categories && $categories->num_rows > 0) {
                         $categories->data_seek(0);
-                        while($cat = $categories->fetch_assoc()): 
+                        while ($cat = $categories->fetch_assoc()):
                     ?>
-                        <option value="<?php echo $cat['id']; ?>" <?php echo ($edit_product && $edit_product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cat['name']); ?>
-                        </option>
-                    <?php 
+                            <option value="<?php echo $cat['id']; ?>" <?php echo ($edit_product && $edit_product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['name']); ?>
+                            </option>
+                    <?php
                         endwhile;
                     } else {
                         echo '<option value="" disabled>No categories found. Please add categories first.</option>';
@@ -220,7 +215,12 @@ $show_form = isset($_GET['add']) || $edit_product || ($message_type === 'danger'
             </div>
             <div class="form-group">
                 <label>Price (Rs.) *</label>
-                <input type="number" step="0.01" min="0" name="price" class="form-control" placeholder="0.00" value="<?php echo $edit_product ? htmlspecialchars($edit_product['price']) : ''; ?>" required>
+                <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" value="<?php echo $edit_product ? htmlspecialchars($edit_product['price']) : ''; ?>" required>
+            </div>
+            <div class="form-group">
+                <label>Discount Percentage (%)</label>
+                <input type="number" name="discount_percentage" min="0" max="100" value="<?php echo $edit_product ? htmlspecialchars($edit_product['discount_percentage'] ?? '0') : '0'; ?>" class="form-control" required>
+                <small style="color: #6c757d;">Enter 0 for no discount, or 10-50 for discounts</small>
             </div>
             <div class="form-group">
                 <label>Stock Quantity *</label>
@@ -249,28 +249,27 @@ $show_form = isset($_GET['add']) || $edit_product || ($message_type === 'danger'
             <label>Description *</label>
             <textarea name="description" class="form-control" rows="4" placeholder="Enter product description..." required><?php echo $edit_product ? htmlspecialchars($edit_product['description']) : ''; ?></textarea>
         </div>
-        
+
         <div class="form-actions">
             <button type="button" class="btn-cancel" onclick="toggleForm(false)">Cancel</button>
             <button type="submit" name="<?php echo $edit_product ? 'edit_product' : 'add_product'; ?>" class="btn-save">
-                <?php echo $edit_product ? ' Update Product' : 'Save Product'; ?>
+                <?php echo $edit_product ? 'Update Product' : 'Save Product'; ?>
             </button>
         </div>
     </form>
 </div>
 
 <script>
-function toggleForm(show) {
-    const form = document.getElementById('product-form');
-    if (show) {
-        form.style.display = 'block';
-        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        form.style.display = 'none';
-        // Optional: reload to clear form state cleanly
-        window.location.href = 'products.php'; 
+    function toggleForm(show) {
+        const form = document.getElementById('product-form');
+        if (show) {
+            form.style.display = 'block';
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            form.style.display = 'none';
+            window.location.href = 'products.php';
+        }
     }
-}
 </script>
 
 <!-- PRODUCTS TABLE -->
@@ -281,6 +280,7 @@ function toggleForm(show) {
             <th>Product Name</th>
             <th>Category</th>
             <th>Price</th>
+            <th>Discount</th>
             <th>Stock</th>
             <th>Status</th>
             <th>Actions</th>
@@ -288,16 +288,23 @@ function toggleForm(show) {
     </thead>
     <tbody>
         <?php if ($products && $products->num_rows > 0): ?>
-            <?php while($p = $products->fetch_assoc()): ?>
+            <?php while ($p = $products->fetch_assoc()): ?>
                 <tr>
                     <td>
-                        <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($p['image'] ?? 'default-flower.jpg'); ?>" 
-                             alt="<?php echo htmlspecialchars($p['name']); ?>" class="product-img-sm"
-                             onerror="this.src='https://via.placeholder.com/50?text=No+Img'">
+                        <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($p['image'] ?? 'default-flower.jpg'); ?>"
+                            alt="<?php echo htmlspecialchars($p['name']); ?>" class="product-img-sm"
+                            onerror="this.src='https://via.placeholder.com/50?text=No+Img'">
                     </td>
                     <td style="font-weight: 600;"><?php echo htmlspecialchars($p['name']); ?></td>
                     <td><?php echo htmlspecialchars($p['category_name'] ?? 'Uncategorized'); ?></td>
                     <td style="font-weight: 700; color: #2d6a4f;"><?php echo formatPrice($p['price']); ?></td>
+                    <td>
+                        <?php if (!empty($p['discount_percentage']) && $p['discount_percentage'] > 0): ?>
+                            <span style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;"><?php echo $p['discount_percentage']; ?>%</span>
+                        <?php else: ?>
+                            <span style="color: #9ca3af;">-</span>
+                        <?php endif; ?>
+                    </td>
                     <td><?php echo $p['stock_quantity'] ?? '0'; ?></td>
                     <td>
                         <span class="<?php echo $p['status'] === 'active' ? 'status-active' : 'status-inactive'; ?>">
@@ -312,7 +319,7 @@ function toggleForm(show) {
             <?php endwhile; ?>
         <?php else: ?>
             <tr>
-                <td colspan="7" style="text-align: center; padding: 50px; color: #718096;">
+                <td colspan="8" style="text-align: center; padding: 50px; color: #718096;">
                     No products found. Add your first flower! 🌸
                 </td>
             </tr>

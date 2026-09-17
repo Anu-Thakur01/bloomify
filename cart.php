@@ -14,7 +14,6 @@ $cart_total = getCartTotal();
     .cart-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
     .cart-product-name { font-weight: 600; color: #2d3748; }
     
-    /* NEW: Quantity Controls */
     .qty-controls { display: flex; align-items: center; gap: 10px; border: 2px solid #e2e8f0; border-radius: 8px; padding: 4px; width: fit-content; }
     .qty-btn { width: 32px; height: 32px; border: none; background: #f8f9fa; border-radius: 6px; cursor: pointer; font-size: 1.2rem; font-weight: 700; color: #2d6a4f; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
     .qty-btn:hover { background: #2d6a4f; color: white; }
@@ -35,13 +34,11 @@ $cart_total = getCartTotal();
     
     .empty-cart { text-align: center; padding: 60px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
     .empty-cart h3 { color: #2d6a4f; margin-bottom: 15px; font-size: 1.5rem; }
-    
-    /* Loading animation */
     .updating { opacity: 0.5; pointer-events: none; }
 </style>
 
 <div class="cart-container">
-    <h2 style="color: #2d6a4f; margin-bottom: 30px; font-size: 2rem;">Your Shopping Cart </h2>
+    <h2 style="color: #2d6a4f; margin-bottom: 30px; font-size: 2rem;">Your Shopping Cart</h2>
 
     <?php if (!empty($cart_items)): ?>
         <table class="cart-table">
@@ -58,19 +55,34 @@ $cart_total = getCartTotal();
                 <?php foreach ($cart_items as $item): 
                     $pid = isset($item['product_id']) ? $item['product_id'] : $item['id'];
                 ?>
-                    <tr data-product-id="<?php echo $pid; ?>" data-price="<?php echo $item['price']; ?>">
+                    <!-- ✅ Use final_price for data attribute so JS/AJAX uses discounted price -->
+                    <tr data-product-id="<?php echo $pid; ?>" data-final-price="<?php echo $item['final_price']; ?>">
                         <td style="display: flex; align-items: center; gap: 15px;">
                             <?php if (!empty($item['image'])): ?>
-                                <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($item['image']); ?>" 
-                                     alt="<?php echo htmlspecialchars($item['name']); ?>" class="cart-img">
+                                <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="cart-img">
                             <?php else: ?>
                                 <div class="cart-img" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">🌸</div>
                             <?php endif; ?>
                             <span class="cart-product-name"><?php echo htmlspecialchars($item['name']); ?></span>
                         </td>
-                        <td><?php echo formatPrice($item['price']); ?></td>
+                        
+                        <!-- ✅ UPDATED PRICE DISPLAY WITH DISCOUNT -->
                         <td>
-                            <!-- NEW: Quantity Controls -->
+                            <?php if (!empty($item['discount_percentage']) && $item['discount_percentage'] > 0): ?>
+                                <div style="text-decoration: line-through; color: #9ca3af; font-size: 0.9rem;">
+                                    <?php echo formatPrice($item['price']); ?>
+                                </div>
+                                <div style="color: #dc2626; font-weight: 700;">
+                                    <?php echo formatPrice($item['final_price']); ?>
+                                </div>
+                            <?php else: ?>
+                                <div style="font-weight: 600;">
+                                    <?php echo formatPrice($item['price']); ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+
+                        <td>
                             <div class="qty-controls">
                                 <button type="button" class="qty-btn decrease" onclick="updateQty(this, 'decrease')">−</button>
                                 <span class="qty-value"><?php echo $item['quantity']; ?></span>
@@ -100,10 +112,10 @@ $cart_total = getCartTotal();
         </div>
     <?php else: ?>
         <div class="empty-cart">
-            <div style="font-size: 4rem; margin-bottom: 20px;"></div>
+            <div style="font-size: 4rem; margin-bottom: 20px;">🛒</div>
             <h3>Your cart is empty</h3>
             <p style="color: #6c757d; margin-bottom: 30px;">Looks like you haven't added any flowers yet.</p>
-            <a href="index.php" class="btn btn-primary" style="width: auto; padding: 12px 30px;">Start Shopping</a>
+            <a href="index.php" class="btn-continue">Start Shopping</a>
         </div>
     <?php endif; ?>
 </div>
@@ -112,50 +124,37 @@ $cart_total = getCartTotal();
 function updateQty(btn, action) {
     const row = btn.closest('tr');
     const productId = row.dataset.productId;
-    const price = parseFloat(row.dataset.price);
+    const finalPrice = parseFloat(row.dataset.finalPrice); // ✅ Use discounted price
     const qtySpan = row.querySelector('.qty-value');
     const subtotalCell = row.querySelector('.item-subtotal');
     const totalEl = document.getElementById('cart-total');
     
-    // Prevent double clicks
     if (row.classList.contains('updating')) return;
     row.classList.add('updating');
     
     fetch('update-cart.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ product_id: productId, action: action, price: price })
+        body: JSON.stringify({ product_id: productId, action: action, price: finalPrice })
     })
     .then(res => res.json())
     .then(data => {
         row.classList.remove('updating');
-        
         if (data.success) {
             if (data.removed) {
-                // Item was removed (quantity went to 0)
                 row.style.transition = 'opacity 0.3s';
                 row.style.opacity = '0';
                 setTimeout(() => {
                     row.remove();
-                    // Check if cart is now empty
-                    if (document.querySelectorAll('#cart-body tr').length === 0) {
-                        location.reload();
-                    }
+                    if (document.querySelectorAll('#cart-body tr').length === 0) location.reload();
                 }, 300);
             } else {
-                // Update quantity and prices
                 qtySpan.textContent = data.new_qty;
                 subtotalCell.textContent = data.item_subtotal;
                 totalEl.textContent = data.new_total;
-                
-                // Visual feedback
                 totalEl.style.transform = 'scale(1.1)';
                 setTimeout(() => totalEl.style.transform = 'scale(1)', 200);
             }
-            
-            // Update cart count in header
-            fetch('<?php echo SITE_URL; ?>/includes/header.php') // Optional: reload header for cart count
-                .catch(() => {}); 
         } else {
             alert(data.message || 'Failed to update quantity');
         }

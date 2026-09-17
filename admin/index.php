@@ -25,19 +25,19 @@ $recent_orders = $conn->query($recent_orders_sql);
     <div class="stat-card revenue">
         <div class="stat-label">Total Revenue</div>
         <div class="stat-value"><?php echo formatPrice($stats['total_revenue'] ?? 0); ?></div>
-        <div class="stat-icon">💰</div>
+        <div class="stat-icon"></div>
     </div>
     
     <div class="stat-card">
         <div class="stat-label">Total Orders</div>
         <div class="stat-value"><?php echo $stats['total_orders'] ?? 0; ?></div>
-        <div class="stat-icon">📦</div>
+        <div class="stat-icon"></div>
     </div>
     
     <div class="stat-card pending">
         <div class="stat-label">Pending Orders</div>
         <div class="stat-value" style="color: #ff4757;"><?php echo $stats['pending_orders'] ?? 0; ?></div>
-        <div class="stat-icon">⏳</div>
+        <div class="stat-icon"></div>
     </div>
     
     <div class="stat-card users">

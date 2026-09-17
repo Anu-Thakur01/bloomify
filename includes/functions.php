@@ -76,13 +76,14 @@ function addToCart($product_id, $quantity = 1) {
     $stmt->execute();
 }
 
-// Get Cart Total (Database Version)
+// Get Cart Total (Database Version - ✅ UPDATED FOR DISCOUNTS)
 function getCartTotal() {
     global $conn;
     if (!isLoggedIn()) return 0;
     
     $user_id = $_SESSION['user_id'];
-    $sql = "SELECT SUM(c.quantity * p.price) as total 
+    // Calculate discounted price in SQL: price - (price * discount_percentage / 100)
+    $sql = "SELECT SUM(c.quantity * (p.price - (p.price * p.discount_percentage / 100))) as total 
             FROM cart c 
             JOIN products p ON c.product_id = p.id 
             WHERE c.user_id = ? AND p.status = 'active'";
@@ -96,11 +97,8 @@ function getCartTotal() {
 // Redirect with Message & Save Return URL
 function redirect($url, $message = '', $type = 'success') {
     // Save the current page URL before redirecting (for "return after login")
-    // Only save if we aren't already on login/register pages AND user is not logged in
     if (!isset($_SESSION['user_id']) && !in_array(basename(parse_url($url, PHP_URL_PATH)), ['login.php', 'register.php'])) {
-        // Build full URL including query string
         $full_url = $_SERVER['REQUEST_URI'];
-        // Make sure it's an absolute path relative to site root
         if (strpos($full_url, SITE_URL) === false) {
             $full_url = SITE_URL . $full_url;
         }
@@ -139,7 +137,7 @@ function displayMessage() {
     }
 }
 
-// Get Cart Items with Product Details (Database Version)
+// Get Cart Items with Product Details (Database Version - ✅ UPDATED FOR DISCOUNTS)
 function getCartItems() {
     global $conn;
     if (!isLoggedIn()) return [];
@@ -156,7 +154,14 @@ function getCartItems() {
     
     $items = [];
     while ($row = $result->fetch_assoc()) {
-        $row['subtotal'] = $row['price'] * $row['quantity'];
+        // ✅ Calculate discounted price
+        $discount = (int)($row['discount_percentage'] ?? 0);
+        $final_price = $row['price'] - ($row['price'] * $discount / 100);
+        
+        $row['final_price'] = $final_price;
+        $row['discount_percentage'] = $discount;
+        $row['subtotal'] = $final_price * $row['quantity']; // ✅ Use discounted price for subtotal
+        
         $items[] = $row;
     }
     return $items;
