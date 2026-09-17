@@ -16,9 +16,28 @@ $has_categories = ($categories && $categories->num_rows > 0);
 
 <style>
     /* Homepage Specific UI */
-    .hero-section { padding: 80px 20px 60px; text-align: center; background: linear-gradient(to bottom, #f0f9f4, #ffffff); }
-    .hero-title { font-size: 3rem; color: #2d6a4f; font-weight: 800; margin-bottom: 15px; letter-spacing: -1px; }
-    .hero-subtitle { font-size: 1.2rem; color: #6c757d; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .hero-section {
+        padding: 40px 20px 30px; /* Reduced from 80px 20px 60px */
+        text-align: center;
+        background: linear-gradient(to bottom, #f0f9f4, #ffffff);
+    }
+
+    .hero-title {
+        font-size: 2.5rem; /* Reduced from 3rem */
+        color: #2d6a4f;
+        font-weight: 800;
+        margin-bottom: 10px; /* Reduced from 15px */
+        letter-spacing: -1px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem; /* Reduced from 1.2rem */
+        color: #6c757d;
+        margin-bottom: 30px; /* Reduced from 40px */
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
     
     .search-container { max-width: 700px; margin: 0 auto; }
     .search-form { display: flex; box-shadow: 0 10px 30px rgba(45, 106, 79, 0.15); border-radius: 50px; overflow: hidden; background: white; border: 1px solid #e2e8f0; }
