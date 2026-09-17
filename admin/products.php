@@ -30,9 +30,10 @@ if (isset($_POST['add_product'])) {
         }
     }
 
-    $sql = "INSERT INTO products (name, category_id, price, discount_percentage, stock_quantity, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    // ✅ UPDATED: Saves to BOTH 'stock' and 'stock_quantity' columns
+    $sql = "INSERT INTO products (name, category_id, price, discount_percentage, stock, stock_quantity, description, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sidiisss", $name, $category_id, $price, $discount_percentage, $stock, $description, $image_name, $status);
+    $stmt->bind_param("sidiissss", $name, $category_id, $price, $discount_percentage, $stock, $stock, $description, $image_name, $status);
 
     if ($stmt->execute()) {
         $message = "Product added successfully!";
@@ -68,9 +69,10 @@ if (isset($_POST['edit_product'])) {
         }
     }
 
-    $sql = "UPDATE products SET name = ?, category_id = ?, price = ?, discount_percentage = ?, stock_quantity = ?, description = ?, image = ?, status = ? WHERE id = ?";
+    // ✅ UPDATED: Saves to BOTH 'stock' and 'stock_quantity' columns
+    $sql = "UPDATE products SET name = ?, category_id = ?, price = ?, discount_percentage = ?, stock = ?, stock_quantity = ?, description = ?, image = ?, status = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sidiisssi", $name, $category_id, $price, $discount_percentage, $stock, $description, $image_name, $status, $id);
+    $stmt->bind_param("sidiissssi", $name, $category_id, $price, $discount_percentage, $stock, $stock, $description, $image_name, $status, $id);
 
     if ($stmt->execute()) {
         $message = "Product updated successfully!";

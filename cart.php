@@ -55,7 +55,6 @@ $cart_total = getCartTotal();
                 <?php foreach ($cart_items as $item): 
                     $pid = isset($item['product_id']) ? $item['product_id'] : $item['id'];
                 ?>
-                    <!-- ✅ Use final_price for data attribute so JS/AJAX uses discounted price -->
                     <tr data-product-id="<?php echo $pid; ?>" data-final-price="<?php echo $item['final_price']; ?>">
                         <td style="display: flex; align-items: center; gap: 15px;">
                             <?php if (!empty($item['image'])): ?>
@@ -66,7 +65,6 @@ $cart_total = getCartTotal();
                             <span class="cart-product-name"><?php echo htmlspecialchars($item['name']); ?></span>
                         </td>
                         
-                        <!-- ✅ UPDATED PRICE DISPLAY WITH DISCOUNT -->
                         <td>
                             <?php if (!empty($item['discount_percentage']) && $item['discount_percentage'] > 0): ?>
                                 <div style="text-decoration: line-through; color: #9ca3af; font-size: 0.9rem;">
@@ -124,7 +122,7 @@ $cart_total = getCartTotal();
 function updateQty(btn, action) {
     const row = btn.closest('tr');
     const productId = row.dataset.productId;
-    const finalPrice = parseFloat(row.dataset.finalPrice); // ✅ Use discounted price
+    const finalPrice = parseFloat(row.dataset.finalPrice);
     const qtySpan = row.querySelector('.qty-value');
     const subtotalCell = row.querySelector('.item-subtotal');
     const totalEl = document.getElementById('cart-total');

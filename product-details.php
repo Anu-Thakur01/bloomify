@@ -15,7 +15,7 @@ if (!isset($_GET['id'])) {
 $product_id = (int)$_GET['id'];
 $user_id = $_SESSION['user_id'];
 
-// 3. Fetch product details
+// 3. Fetch product details (p.* automatically includes discount_percentage)
 $sql = "SELECT p.*, c.name as category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     .stars { color: #ffd700; font-size: 1.2rem; }
     .rating-count { color: #6c757d; font-size: 0.95rem; }
     
-    .product-price-large { font-size: 2rem; color: #40916c; font-weight: 800; margin-bottom: 15px; }
+    .product-price-large { margin-bottom: 15px; }
     
     .stock-badge {
         display: inline-block;
@@ -158,19 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     .btn-back:hover { background: #5a6268; }
     
     /* ✅ REVIEWS SECTION STYLES */
-    .reviews-section {
-        margin-top: 50px;
-        padding-top: 40px;
-        border-top: 2px solid #f0f0f0;
-    }
+    .reviews-section { margin-top: 50px; padding-top: 40px; border-top: 2px solid #f0f0f0; }
     .reviews-title { font-size: 1.8rem; color: #2d6a4f; margin-bottom: 30px; font-weight: 700; }
     
-    .review-card {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
+    .review-card { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .reviewer-name { font-weight: 700; color: #2d3748; font-size: 1rem; }
     .review-date { color: #6c757d; font-size: 0.85rem; }
@@ -187,19 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     .admin-reply strong { color: #2d6a4f; font-size: 0.9rem; }
     .admin-reply p { margin: 8px 0 0 0; color: #4a5568; font-size: 0.95rem; }
     
-    .review-form {
-        background: #f0f9f4;
-        border-radius: 12px;
-        padding: 25px;
-        margin-bottom: 30px;
-    }
+    .review-form { background: #f0f9f4; border-radius: 12px; padding: 25px; margin-bottom: 30px; }
     .form-group-review { margin-bottom: 15px; }
     .form-group-review label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; }
     .star-rating { display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer; }
     .star-rating input { display: none; }
     .star-rating label { color: #d1d5db; cursor: pointer; transition: color 0.2s; }
-    .star-rating label:hover,
-    .star-rating input:checked ~ label { color: #ffd700; }
+    .star-rating label:hover, .star-rating input:checked ~ label { color: #ffd700; }
     .textarea-review { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; min-height: 100px; resize: vertical; }
     .textarea-review:focus { outline: none; border-color: #40916c; }
     .btn-submit-review { background: #40916c; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
@@ -238,7 +223,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
                 <span class="rating-count"><?php echo $avg_rating; ?> (<?php echo $total_reviews; ?> reviews)</span>
             </div>
             
-            <div class="product-price-large"><?php echo formatPrice($product['price']); ?></div>
+            <!-- ✅ UPDATED PRICE DISPLAY WITH DISCOUNT -->
+            <div class="product-price-large">
+                <?php
+                $original_price = $product['price'];
+                $discount = (int)($product['discount_percentage'] ?? 0);
+                $discounted_price = $original_price - ($original_price * $discount / 100);
+                ?>
+                <?php if ($discount > 0): ?>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <span style="text-decoration: line-through; color: #9ca3af; font-size: 1.5rem;">
+                            Rs. <?php echo number_format($original_price, 2); ?>
+                        </span>
+                        <span style="color: #dc2626; font-weight: 800; font-size: 2rem;">
+                            Rs. <?php echo number_format($discounted_price, 2); ?>
+                        </span>
+                        <span style="background: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; font-size: 1rem; font-weight: 700;">
+                            <?php echo $discount; ?>% OFF
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <span style="color: #2d6a4f; font-weight: 800; font-size: 2rem;">
+                        Rs. <?php echo number_format($original_price, 2); ?>
+                    </span>
+                <?php endif; ?>
+            </div>
             
             <?php 
             $stock_qty = (int)($product['stock'] ?? $product['stock_quantity'] ?? 0);
@@ -263,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     
                     <div class="action-buttons">
                         <div class="action-buttons-row">
-                            <button type="submit" name="add_to_cart" class="btn-add-cart"> Add To Cart</button>
+                            <button type="submit" name="add_to_cart" class="btn-add-cart">Add To Cart</button>
                             <button type="button" class="btn-buy-now" onclick="window.location.href='checkout.php'"> Buy Now</button>
                         </div>
                     </div>

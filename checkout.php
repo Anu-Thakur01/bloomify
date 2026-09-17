@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt_item = $conn->prepare($item_sql);
         
         foreach ($cart_items as $item) {
-            // ✅ Save the discounted final_price to the order record
+            // ✅ Saves the discounted final_price to the order history
             $stmt_item->bind_param("iiid", $order_id, $item['id'], $item['quantity'], $item['final_price']);
             $stmt_item->execute();
         }
@@ -163,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div style="font-weight: 600; color: #2d3748;"><?php echo htmlspecialchars($item['name']); ?></div>
                     <div style="font-size: 0.85rem; color: #6c757d;">Qty: <?php echo $item['quantity']; ?></div>
                 </div>
-                <!-- ✅ This already uses the discounted subtotal from getCartItems() -->
                 <div style="font-weight: 700; color: #40916c;"><?php echo formatPrice($item['subtotal']); ?></div>
             </div>
         <?php endforeach; ?>

@@ -2,11 +2,9 @@
 $page_title = 'Products';
 require_once __DIR__ . '/includes/header.php';
 
-// Initialize filters
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
 $category_id = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 
-// Build SQL query - NO LIMIT (shows all products)
 $sql = "SELECT p.id, p.name, p.price, p.discount_percentage, p.stock, p.stock_quantity, p.image, p.status, p.category_id, c.name as category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
@@ -22,13 +20,11 @@ if (!empty($search)) {
     $params[] = $search_param;
     $types .= "ss";
 }
-
 if ($category_id > 0) {
     $sql .= " AND p.category_id = ?";
     $params[] = $category_id;
     $types .= "i";
 }
-
 $sql .= " ORDER BY p.id DESC";
 
 $stmt = $conn->prepare($sql);
@@ -38,133 +34,34 @@ if (!empty($params)) {
 $stmt->execute();
 $products = $stmt->get_result();
 
-// Fetch categories for filter dropdown
 $categories_sql = "SELECT id, name FROM categories ORDER BY name ASC";
 $categories = $conn->query($categories_sql);
 ?>
 
 <style>
-    .products-container {
-        max-width: 1200px;
-        margin: 30px auto;
-        padding: 20px;
-    }
-
-    .products-header {
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-    }
-
-    .products-title {
-        font-size: 2rem;
-        color: #2d6a4f;
-        margin-bottom: 20px;
-        font-weight: 700;
-        text-align: center;
-    }
-
-    .filters {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .search-box {
-        flex: 1;
-        min-width: 250px;
-        position: relative;
-    }
-
-    .search-box input {
-        width: 100%;
-        padding: 12px 45px 12px 15px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: all 0.3s;
-    }
-
-    .search-box input:focus {
-        outline: none;
-        border-color: #40916c;
-        box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.1);
-    }
-
-    .search-box button {
-        position: absolute;
-        right: 5px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: #40916c;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background 0.3s;
-        font-size: 1.1rem;
-    }
-
-    .search-box button:hover {
-        background: #2d6a4f;
-    }
-
-    .category-filter {
-        min-width: 200px;
-    }
-
-    .category-filter select {
-        width: 100%;
-        padding: 12px 15px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 1rem;
-        background: white;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .category-filter select:focus {
-        outline: none;
-        border-color: #40916c;
-    }
-
-    .results-count {
-        color: #6c757d;
-        font-size: 1rem;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .results-count strong {
-        color: #2d6a4f;
-    }
-
-    .results-count a {
-        color: #40916c;
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.3s;
-    }
-
-    .results-count a:hover {
-        color: #2d6a4f;
-        text-decoration: underline;
-    }
-
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 25px;
-    }
-
+    .products-container { max-width: 1200px; margin: 30px auto; padding: 20px; }
+    .products-header { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); margin-bottom: 30px; }
+    .products-title { font-size: 2rem; color: #2d6a4f; margin-bottom: 20px; font-weight: 700; text-align: center; }
+    
+    .filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 250px; position: relative; }
+    .search-box input { width: 100%; padding: 12px 45px 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s; }
+    .search-box input:focus { outline: none; border-color: #40916c; box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.1); }
+    .search-box button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: #40916c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: background 0.3s; font-size: 1.1rem; }
+    .search-box button:hover { background: #2d6a4f; }
+    
+    .category-filter { min-width: 200px; }
+    .category-filter select { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; background: white; cursor: pointer; transition: all 0.3s; }
+    .category-filter select:focus { outline: none; border-color: #40916c; }
+    
+    .results-count { color: #6c757d; font-size: 1rem; margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .results-count strong { color: #2d6a4f; }
+    .results-count a { color: #40916c; text-decoration: none; font-weight: 600; transition: color 0.3s; }
+    .results-count a:hover { color: #2d6a4f; text-decoration: underline; }
+    
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
+    
+    /* ✅ COMPACT PRODUCT CARD STYLES */
     .product-card {
         background: white;
         border-radius: 12px;
@@ -173,100 +70,61 @@ $categories = $conn->query($categories_sql);
         transition: transform 0.3s, box-shadow 0.3s;
         border: 1px solid #f0f0f0;
     }
-
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(45, 106, 79, 0.12);
+        box-shadow: 0 10px 25px rgba(45, 106, 79, 0.12);
         border-color: #40916c;
     }
-
     .product-img {
-        height: 220px;
+        height: 180px; /* Reduced from 220px */
         background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 4rem;
+        font-size: 3.5rem; /* Reduced from 4rem */
         color: #40916c;
         overflow: hidden;
     }
-
-    .product-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s;
-    }
-
-    .product-card:hover .product-img img {
-        transform: scale(1.05);
-    }
-
+    .product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+    .product-card:hover .product-img img { transform: scale(1.05); }
+    
     .product-info {
-        padding: 20px;
+        padding: 15px; /* Reduced from 20px */
         display: flex;
         flex-direction: column;
     }
-
     .product-name {
-        font-size: 1.05rem;
+        font-size: 0.95rem; /* Reduced from 1.05rem */
         font-weight: 700;
         color: #2d3748;
-        margin-bottom: 8px;
+        margin-bottom: 6px; /* Reduced from 8px */
         line-height: 1.4;
     }
-
     .product-category {
-        font-size: 0.85rem;
+        font-size: 0.8rem; /* Reduced from 0.85rem */
         color: #6c757d;
-        margin-bottom: 10px;
+        margin-bottom: 8px; /* Reduced from 10px */
     }
-
     .product-price {
-        font-size: 1.3rem;
+        font-size: 1.1rem; /* Reduced from 1.3rem */
         color: #2d6a4f;
         font-weight: 800;
-        margin-bottom: 12px;
+        margin-bottom: 8px; /* Reduced from 12px */
     }
-
     .product-stock {
-        font-size: 0.85rem;
+        font-size: 0.8rem; /* Reduced from 0.85rem */
         color: #6c757d;
-        margin-bottom: 15px;
+        margin-bottom: 12px; /* Reduced from 15px */
     }
-
-    .no-results {
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .no-results h3 {
-        color: #2d6a4f;
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
-
-    .no-results p {
-        color: #6c757d;
-        margin-bottom: 25px;
-    }
-
+    
+    .no-results { text-align: center; padding: 60px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
+    .no-results h3 { color: #2d6a4f; margin-bottom: 15px; font-size: 1.5rem; }
+    .no-results p { color: #6c757d; margin-bottom: 25px; }
+    
     @media (max-width: 768px) {
-        .filters {
-            flex-direction: column;
-        }
-
-        .search-box,
-        .category-filter {
-            min-width: 100%;
-        }
-
-        .product-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        }
+        .filters { flex-direction: column; }
+        .search-box, .category-filter { min-width: 100%; }
+        .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
     }
 </style>
 
@@ -287,7 +145,6 @@ $categories = $conn->query($categories_sql);
                 All Products
             <?php endif; ?>
         </h1>
-
         <div class="filters">
             <div class="search-box">
                 <form method="GET" action="products.php">
@@ -298,7 +155,6 @@ $categories = $conn->query($categories_sql);
                     <button type="submit"></button>
                 </form>
             </div>
-
             <div class="category-filter">
                 <form method="GET" action="products.php" id="categoryForm">
                     <?php if (!empty($search)): ?>
@@ -318,14 +174,12 @@ $categories = $conn->query($categories_sql);
                 </form>
             </div>
         </div>
-
         <div class="results-count">
             <?php if ($category_id > 0): ?>
                 <a href="categories.php">← Back to Categories</a>
             <?php else: ?>
                 <a href="index.php">← Back to Home</a>
             <?php endif; ?>
-
             <span>Showing <strong><?php echo $products->num_rows; ?></strong> product<?php echo ($products->num_rows != 1) ? 's' : ''; ?></span>
             <?php if (!empty($search) || $category_id > 0): ?>
                 <span>|</span>
@@ -340,7 +194,7 @@ $categories = $conn->query($categories_sql);
                 <div class="product-card">
                     <div class="product-img">
                         <?php if (!empty($product['image'])): ?>
-                            <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" onerror="this.parentElement.innerHTML=''">
+                            <img src="<?php echo SITE_URL; ?>/assets/images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" onerror="this.parentElement.innerHTML='🌸'">
                         <?php else: ?>
                             🌸
                         <?php endif; ?>
@@ -356,28 +210,18 @@ $categories = $conn->query($categories_sql);
                             $discount = (int)($product['discount_percentage'] ?? 0);
                             $discounted_price = $original_price - ($original_price * $discount / 100);
                             ?>
-
                             <?php if ($discount > 0): ?>
                                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                    <span style="text-decoration: line-through; color: #9ca3af; font-size: 1rem;">
-                                        Rs. <?php echo number_format($original_price, 2); ?>
-                                    </span>
-                                    <span style="color: #dc2626; font-weight: 800; font-size: 1.3rem;">
-                                        Rs. <?php echo number_format($discounted_price, 2); ?>
-                                    </span>
-                                    <span style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 700;">
-                                        <?php echo $discount; ?>% OFF
-                                    </span>
+                                    <span style="text-decoration: line-through; color: #9ca3af; font-size: 0.9rem;">Rs. <?php echo number_format($original_price, 2); ?></span>
+                                    <span style="color: #dc2626; font-weight: 800; font-size: 1.1rem;">Rs. <?php echo number_format($discounted_price, 2); ?></span>
+                                    <span style="background: #dc2626; color: white; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;"><?php echo $discount; ?>% OFF</span>
                                 </div>
                             <?php else: ?>
-                                <span style="color: #2d6a4f; font-weight: 800; font-size: 1.3rem;">
-                                    Rs. <?php echo number_format($original_price, 2); ?>
-                                </span>
+                                <span style="color: #2d6a4f; font-weight: 800; font-size: 1.1rem;">Rs. <?php echo number_format($original_price, 2); ?></span>
                             <?php endif; ?>
                         </div>
-                        <!-- ✅ STOCK DISPLAY -->
                         <div class="product-stock">
-                            <?php
+                            <?php 
                             $stock_qty = (int)($product['stock'] ?? $product['stock_quantity'] ?? 0);
                             if ($stock_qty > 0): ?>
                                 <span style="color: #2d6a4f; font-weight: 600;">✓ In Stock (<?php echo $stock_qty; ?>)</span>
@@ -385,19 +229,13 @@ $categories = $conn->query($categories_sql);
                                 <span style="color: #d90429; font-weight: 600;">✕ Out of Stock</span>
                             <?php endif; ?>
                         </div>
-
-                        <!-- ✅ NEW BUTTON LAYOUT -->
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <!-- Top Row: Cart + Wishlist -->
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto;">
                             <div style="display: flex; gap: 8px;">
                                 <form method="POST" action="add-to-cart.php" style="flex: 1; margin: 0;">
                                     <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" name="add_to_cart" style="width: 100%; padding: 10px; background: #40916c; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
-                                        Cart
-                                    </button>
+                                    <button type="submit" name="add_to_cart" style="width: 100%; padding: 8px; background: #40916c; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;"> Cart</button>
                                 </form>
-
                                 <?php if (isLoggedIn()): ?>
                                     <?php
                                     $check_sql = "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?";
@@ -409,21 +247,15 @@ $categories = $conn->query($categories_sql);
                                     <form method="POST" action="wishlist-action.php" style="margin: 0;">
                                         <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                                         <input type="hidden" name="action" value="<?php echo $in_wishlist ? 'remove' : 'add'; ?>">
-                                        <button type="submit" style="width: 45px; height: 38px; background: <?php echo $in_wishlist ? '#fee2e2' : 'white'; ?>; color: <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border: 2px solid <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border-radius: 6px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+                                        <button type="submit" style="width: 38px; height: 34px; background: <?php echo $in_wishlist ? '#fee2e2' : 'white'; ?>; color: <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border: 2px solid <?php echo $in_wishlist ? '#d90429' : '#2d6a4f'; ?>; border-radius: 6px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
                                             <?php echo $in_wishlist ? '❤️' : '♡'; ?>
                                         </button>
                                     </form>
                                 <?php else: ?>
-                                    <a href="login.php" style="width: 45px; height: 38px; background: white; color: #2d6a4f; border: 2px solid #2d6a4f; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; text-decoration: none;">
-                                        ♡
-                                    </a>
+                                    <a href="login.php" style="width: 38px; height: 34px; background: white; color: #2d6a4f; border: 2px solid #2d6a4f; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none;">♡</a>
                                 <?php endif; ?>
                             </div>
-
-                            <!-- Bottom Row: View Details -->
-                            <a href="product-details.php?id=<?php echo $product['id']; ?>" style="width: 100%; padding: 10px; background: white; color: #2d6a4f; border: 2px solid #40916c; border-radius: 6px; font-weight: 600; text-align: center; text-decoration: none; font-size: 0.9rem; display: block; box-sizing: border-box;">
-                                View Details
-                            </a>
+                            <a href="product-details.php?id=<?php echo $product['id']; ?>" style="width: 100%; padding: 8px; background: white; color: #2d6a4f; border: 2px solid #40916c; border-radius: 6px; font-weight: 600; text-align: center; text-decoration: none; font-size: 0.85rem; display: block; box-sizing: border-box;">View Details</a>
                         </div>
                     </div>
                 </div>
