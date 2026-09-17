@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $product_service_charge = 0;
             $product_delivery_charge = 0;
             $success_url = SITE_URL . '/verify-esewa-payment.php';
-            $failure_url = SITE_URL . '/checkout.php?payment=cancelled';
+            $failure_url = SITE_URL . '/payment-cancelled.php';
             $signed_field_names = 'total_amount,transaction_uuid,product_code';
             
             $message = "total_amount={$total_amount},transaction_uuid={$transaction_uuid},product_code={$product_code}";

@@ -176,7 +176,7 @@ $items = $items_stmt->get_result();
         <!-- Purchased Products Section -->
         <?php if ($items->num_rows > 0): ?>
             <div class="purchased-products">
-                <h3 class="products-title">📦 Products in this Order:</h3>
+                <h3 class="products-title">Products in this Order:</h3>
                 <?php while($item = $items->fetch_assoc()): ?>
                     <div class="product-item">
                         <?php if (!empty($item['image'])): ?>
@@ -197,8 +197,8 @@ $items = $items_stmt->get_result();
         <?php endif; ?>
         
         <div class="action-buttons">
-            <a href="<?php echo SITE_URL; ?>/my-orders.php" class="btn-my-orders">My Orders</a>
-            <a href="<?php echo SITE_URL; ?>/products.php" class="btn-continue">Continue Shopping</a>
+            <a href="<?php echo SITE_URL; ?>/index.php" class="btn-my-orders">Go to Home</a>
+            <a href="<?php echo SITE_URL; ?>/my-orders.php" class="btn-continue">My Orders</a>
         </div>
     </div>
 </div>

@@ -92,10 +92,11 @@ $has_categories = ($categories && $categories->num_rows > 0);
     </div>
 </div>
 
-<!-- Banner Section -->
+<!-- Banner Section 
 <div class="banner-section">
     <img src="<?php echo SITE_URL; ?>/assets/images/banner-flowers.jpg" alt="Beautiful Flowers" class="banner-img" onerror="this.style.background='linear-gradient(135deg, #2d6a4f 0%, #40916c 100%)'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.innerHTML='<span style=\'color:white; font-size:2rem; font-weight:800;\'> Bloomify</span>';">
 </div>
+-->
 
 <!-- Categories Section -->
 <div class="categories-section">
