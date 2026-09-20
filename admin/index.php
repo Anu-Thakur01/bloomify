@@ -4,47 +4,77 @@ require_once __DIR__ . '/includes/admin-auth.php';
 require_once __DIR__ . '/includes/admin-header.php';
 
 // Fetch Dashboard Stats
+// ✅ UPDATED: total_orders now only counts SUCCESSFUL payments
 $stats_sql = "SELECT 
-                COUNT(*) as total_orders,
+                COUNT(CASE WHEN payment_status = 'success' THEN 1 END) as total_orders,
                 SUM(CASE WHEN payment_status = 'success' THEN total_amount ELSE 0 END) as total_revenue,
-                SUM(CASE WHEN payment_status = 'pending' OR delivery_status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
+                SUM(CASE WHEN payment_status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
                 (SELECT COUNT(*) FROM users WHERE role = 'user') as total_users
             FROM orders";
 $stats = $conn->query($stats_sql)->fetch_assoc();
 
 // Fetch Recent Orders (Last 10)
+// ✅ UPDATED: Only fetch orders where payment_status is 'success'
 $recent_orders_sql = "SELECT o.*, u.name as user_name 
                       FROM orders o 
                       JOIN users u ON o.user_id = u.id 
+                      WHERE o.payment_status = 'success'
                       ORDER BY o.created_at DESC LIMIT 10";
 $recent_orders = $conn->query($recent_orders_sql);
 ?>
 
+<style>
+    /* ✅ NEW: Make stat cards clickable with a nice hover effect */
+    .stat-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .stat-card-link:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+</style>
+
 <!-- Dashboard Stats Cards -->
 <div class="stats-grid">
-    <div class="stat-card revenue">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value"><?php echo formatPrice($stats['total_revenue'] ?? 0); ?></div>
-        <div class="stat-icon"></div>
-    </div>
+    <!-- ✅ Clickable: Goes to Orders Page -->
+    <a href="orders.php" class="stat-card-link">
+        <div class="stat-card revenue">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value"><?php echo formatPrice($stats['total_revenue'] ?? 0); ?></div>
+            <div class="stat-icon"></div>
+        </div>
+    </a>
     
-    <div class="stat-card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value"><?php echo $stats['total_orders'] ?? 0; ?></div>
-        <div class="stat-icon"></div>
-    </div>
+    <!-- ✅ Clickable: Goes to Orders Page -->
+    <a href="orders.php" class="stat-card-link">
+        <div class="stat-card">
+            <div class="stat-label">Successful Orders</div>
+            <div class="stat-value"><?php echo $stats['total_orders'] ?? 0; ?></div>
+            <div class="stat-icon"></div>
+        </div>
+    </a>
     
-    <div class="stat-card pending">
-        <div class="stat-label">Pending Orders</div>
-        <div class="stat-value" style="color: #ff4757;"><?php echo $stats['pending_orders'] ?? 0; ?></div>
-        <div class="stat-icon"></div>
-    </div>
+    <!-- ✅ Clickable: Goes to Orders Page (to handle pending ones) -->
+    <a href="orders.php" class="stat-card-link">
+        <div class="stat-card pending">
+            <div class="stat-label">Pending Orders</div>
+            <div class="stat-value" style="color: #ff4757;"><?php echo $stats['pending_orders'] ?? 0; ?></div>
+            <div class="stat-icon"></div>
+        </div>
+    </a>
     
-    <div class="stat-card users">
-        <div class="stat-label">Total Users</div>
-        <div class="stat-value"><?php echo $stats['total_users'] ?? 0; ?></div>
-        <div class="stat-icon">👥</div>
-    </div>
+    <!-- ✅ Clickable: Goes to Users Page (if you have one, otherwise change to '#') -->
+    <a href="users.php" class="stat-card-link">
+        <div class="stat-card users">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value"><?php echo $stats['total_users'] ?? 0; ?></div>
+            <div class="stat-icon">👥</div>
+        </div>
+    </a>
 </div>
 
 <!-- Pending COD Alert Banner -->
@@ -62,7 +92,7 @@ $recent_orders = $conn->query($recent_orders_sql);
 <?php endif; ?>
 
 <!-- Recent Orders Table -->
-<h2 class="section-title">Recent Orders</h2>
+<h2 class="section-title">Recent Successful Orders</h2>
 <table class="admin-table">
     <thead>
         <tr>
@@ -78,7 +108,6 @@ $recent_orders = $conn->query($recent_orders_sql);
     <tbody>
         <?php if ($recent_orders->num_rows > 0): ?>
             <?php while($order = $recent_orders->fetch_assoc()): 
-                // Safely format status for CSS class (e.g., "awaiting_payment" -> "badge-awaiting-payment")
                 $safe_status = strtolower(str_replace('_', '-', $order['delivery_status']));
                 $badge_class = 'badge-' . $safe_status;
             ?>
@@ -86,7 +115,7 @@ $recent_orders = $conn->query($recent_orders_sql);
                     <td style="font-weight: 700; color: #2d6a4f;">#<?php echo htmlspecialchars($order['order_number']); ?></td>
                     <td><?php echo htmlspecialchars($order['user_name']); ?></td>
                     <td style="font-weight: 700;"><?php echo formatPrice($order['total_amount']); ?></td>
-                    <td><?php echo htmlspecialchars($order['payment_method']); ?></td>
+                    <td><?php echo htmlspecialchars(ucfirst($order['payment_method'])); ?></td>
                     <td>
                         <span class="status-badge-sm <?php echo $badge_class; ?>">
                             <?php echo ucfirst(str_replace('_', ' ', $order['delivery_status'])); ?>
@@ -101,7 +130,7 @@ $recent_orders = $conn->query($recent_orders_sql);
         <?php else: ?>
             <tr>
                 <td colspan="7" style="text-align: center; padding: 50px; color: #718096;">
-                    No orders yet. Start selling! 🌸
+                    No successful orders yet. Start selling! 🌸
                 </td>
             </tr>
         <?php endif; ?>
