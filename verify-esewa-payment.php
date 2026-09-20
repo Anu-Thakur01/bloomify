@@ -32,16 +32,20 @@ if (isset($_REQUEST['data'])) {
             }
         }
         $message = implode(',', $message_parts);
-        $expected_signature = base64_encode(hash_hmac('sha256', $message, '8gBm/:&EnhH.1/q', true));
+        
+        // Use test secret key for development
+        $secret_key = '8gBm/:&EnhH.1/q'; // eSewa test secret key
+        $expected_signature = base64_encode(hash_hmac('sha256', $message, $secret_key, true));
         
         $is_signature_valid = ($signature === $expected_signature);
         
         // Check if payment was successful
         $is_success = (strtoupper($status) === 'COMPLETE');
         
-        if ($is_success) {
+        if ($is_success && $is_signature_valid) {
             // ✅ 1. Update order status in database
-            $stmt = $conn->prepare("UPDATE orders SET payment_status = 'success', delivery_status = 'processing', transaction_id = ? WHERE order_number = ?");
+            // Set delivery_status to 'confirmed' for successful eSewa payment
+            $stmt = $conn->prepare("UPDATE orders SET payment_status = 'success', delivery_status = 'confirmed', transaction_id = ? WHERE order_number = ?");
             $stmt->bind_param("ss", $transaction_code, $order_number);
             $stmt->execute();
             
