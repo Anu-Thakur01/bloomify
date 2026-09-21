@@ -221,7 +221,7 @@ if ($filter !== 'all') {
                     <td>
                         <?php if ($is_online_success): ?>
                             <!-- ✅ No admin action needed for successful online payments -->
-                            <span class="completed-badge">✓ Auto-Delivered</span>
+                            <span class="completed-badge">✓ Delivered</span>
 
                         <?php elseif ($is_pending_cod): ?>
                             <!-- ✅ Admin must manually confirm COD -->
