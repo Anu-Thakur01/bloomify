@@ -7,7 +7,6 @@ if (!isLoggedIn()) {
 }
 
 $user_id = $_SESSION['user_id'];
-// Updated query to exclude archived orders
 $sql = "SELECT * FROM orders WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -22,7 +21,6 @@ $orders = $stmt->get_result();
     .order-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; border-left: 5px solid transparent; }
     .order-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
     
-    /* Dynamic border colors based on status */
     .order-card.status-pending { border-left-color: #ffc107; }
     .order-card.status-processing { border-left-color: #17a2b8; }
     .order-card.status-completed { border-left-color: #28a745; }
@@ -46,9 +44,9 @@ $orders = $stmt->get_result();
     .badge-cancelled { background: #f8d7da; color: #721c24; }
     
     .payment-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; }
-    .pay-esewa { background: #60B054; color: white; }
-    .pay-khalti { background: #5C2D91; color: white; }
-    .pay-cod { background: #FFB800; color: #2d3748; }
+    .pay-esewa { background: #d1fae5; color: #065f46; }
+    .pay-khalti { background: #e9d5ff; color: #6b21a8; }
+    .pay-cod { background: #fef3c7; color: #92400e; }
     
     .order-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px; }
     
@@ -58,26 +56,8 @@ $orders = $stmt->get_result();
     .btn-cancel { background: white; color: #dc3545; border: 2px solid #dc3545; padding: 8px 22px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
     .btn-cancel:hover { background: #dc3545; color: white; transform: translateY(-2px); }
     
-    /* NEW: Archive/Remove Button Styles */
-    .btn-archive { 
-        background: #6c757d; 
-        color: white; 
-        border: none;
-        padding: 10px 24px; 
-        border-radius: 8px; 
-        text-decoration: none; 
-        font-weight: 600; 
-        font-size: 0.95rem; 
-        transition: all 0.3s; 
-        display: inline-flex; 
-        align-items: center; 
-        gap: 8px; 
-    }
-    .btn-archive:hover { 
-        background: #5a6268; 
-        transform: translateY(-2px); 
-        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-    }
+    .btn-archive { background: #6c757d; color: white; border: none; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-archive:hover { background: #5a6268; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3); }
     
     .empty-orders { text-align: center; padding: 80px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
     .empty-orders h3 { color: #2d6a4f; margin-bottom: 15px; font-size: 1.6rem; }
@@ -91,11 +71,10 @@ $orders = $stmt->get_result();
 </style>
 
 <div class="orders-container">
-    <h1 class="orders-title">My Orders </h1>
+    <h1 class="orders-title">My Orders</h1>
     
     <?php if ($orders->num_rows > 0): ?>
         <?php while($order = $orders->fetch_assoc()): 
-            // Get item count for this order
             $count_sql = "SELECT COUNT(*) as cnt FROM order_items WHERE order_id = ?";
             $count_stmt = $conn->prepare($count_sql);
             $count_stmt->bind_param("i", $order['id']);
@@ -106,10 +85,23 @@ $orders = $stmt->get_result();
             $status_class = 'status-' . $delivery_status;
             $badge_class = 'badge-' . $delivery_status;
             
-            $pay_class = '';
-            if ($order['payment_method'] == 'esewa') $pay_class = 'pay-esewa';
-            elseif ($order['payment_method'] == 'khalti') $pay_class = 'pay-khalti';
-            else $pay_class = 'pay-cod';
+            // ✅ FIXED: Properly format payment method text and class
+            $raw_payment = strtolower(trim($order['payment_method']));
+            $pay_class = 'pay-cod';
+            $pay_text = 'Cash on Delivery';
+            
+            if (in_array($raw_payment, ['esewa'])) {
+                $pay_class = 'pay-esewa';
+                $pay_text = 'eSewa';
+            } elseif (in_array($raw_payment, ['khalti'])) {
+                $pay_class = 'pay-khalti';
+                $pay_text = 'Khalti';
+            } elseif (in_array($raw_payment, ['cod', 'cash on delivery', ''])) {
+                $pay_class = 'pay-cod';
+                $pay_text = 'Cash on Delivery';
+            } else {
+                $pay_text = ucfirst($raw_payment);
+            }
             
             $can_cancel = $delivery_status === 'pending' && $order['payment_status'] === 'pending';
             $can_archive = in_array($delivery_status, ['delivered', 'cancelled']);
@@ -133,7 +125,7 @@ $orders = $stmt->get_result();
                     <div class="order-detail-box">
                         <div class="order-detail-label">Payment Method</div>
                         <span class="payment-badge <?php echo $pay_class; ?>">
-                            <?php echo htmlspecialchars($order['payment_method']); ?>
+                            <?php echo htmlspecialchars($pay_text); ?>
                         </span>
                     </div>
                     <div class="order-detail-box">
@@ -144,18 +136,14 @@ $orders = $stmt->get_result();
                 
                 <div class="order-actions">
                     <?php if ($can_cancel): ?>
-                        <a href="cancel-order.php?id=<?php echo $order['id']; ?>" 
-                           class="btn-cancel" 
-                           onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+                        <a href="cancel-order.php?id=<?php echo $order['id']; ?>" class="btn-cancel" onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
                             ✕ Cancel Order
                         </a>
                     <?php endif; ?>
 
                     <?php if ($can_archive): ?>
-                        <a href="archive-order.php?id=<?php echo $order['id']; ?>" 
-                           class="btn-archive" 
-                           onclick="return confirm('Remove this order from your list? It will still be visible to admin.');">
-                             Remove
+                        <a href="archive-order.php?id=<?php echo $order['id']; ?>" class="btn-archive" onclick="return confirm('Remove this order from your list? It will still be visible to admin.');">
+                            Remove
                         </a>
                     <?php endif; ?>
 
@@ -170,7 +158,7 @@ $orders = $stmt->get_result();
             <div style="font-size: 5rem; margin-bottom: 20px;">📭</div>
             <h3>No Orders Yet</h3>
             <p>You haven't placed any orders yet. Start shopping to see your orders here!</p>
-            <a href="index.php" class="btn btn-primary" style="width: auto; padding: 14px 35px; font-size: 1.1rem;">Start Shopping</a>
+            <a href="index.php" class="btn-view" style="width: auto; padding: 14px 35px; font-size: 1.1rem;">Start Shopping</a>
         </div>
     <?php endif; ?>
 </div>

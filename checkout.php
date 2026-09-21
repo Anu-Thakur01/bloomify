@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <div class="payment-option">
                     <input type="radio" id="cod" name="payment_method" value="Cash on Delivery">
-                    <label for="cod"><span style="font-size: 1.5rem;">💵</span><span>Cash on Delivery</span></label>
+                    <label for="cod"><span style="font-size: 1.5rem;"></span><span>Cash on Delivery</span></label>
                 </div>
             </div>
             <button type="submit" class="btn-place-order">Place Order</button>

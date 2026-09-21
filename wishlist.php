@@ -49,7 +49,7 @@ $wishlist_items = $stmt->get_result();
 
 <div class="wishlist-container">
     <div class="wishlist-header">
-        <h1>❤️ My Wishlist</h1>
+        <h1> My Wishlist</h1>
         <a href="products.php" class="btn-back">← Continue Shopping</a>
     </div>
 
@@ -83,7 +83,7 @@ $wishlist_items = $stmt->get_result();
         </div>
     <?php else: ?>
         <div class="empty-wishlist">
-            <div style="font-size: 4rem; margin-bottom: 20px;">💔</div>
+            <div style="font-size: 4rem; margin-bottom: 20px;"></div>
             <h3>Your wishlist is empty</h3>
             <p style="color: #6c757d; margin-bottom: 25px;">Save your favorite flowers here to buy them later!</p>
             <a href="products.php" class="btn btn-primary" style="padding: 12px 30px;">Browse Flowers</a>

@@ -44,8 +44,8 @@ if (isset($_REQUEST['data'])) {
         
         if ($is_success && $is_signature_valid) {
             // ✅ 1. Update order status in database
-            // Set delivery_status to 'confirmed' for successful eSewa payment
-            $stmt = $conn->prepare("UPDATE orders SET payment_status = 'success', delivery_status = 'confirmed', transaction_id = ? WHERE order_number = ?");
+            // FIXED: Changed 'confirmed' to 'delivered' to match database enum
+            $stmt = $conn->prepare("UPDATE orders SET payment_status = 'success', delivery_status = 'delivered', transaction_id = ? WHERE order_number = ?");
             $stmt->bind_param("ss", $transaction_code, $order_number);
             $stmt->execute();
             
