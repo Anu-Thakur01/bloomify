@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_message'])) {
         <p>Thamel, Kathmandu<br>Nepal 44600</p>
     </div>
     <div class="info-card">
-        <div class="info-icon">📞</div>
+        <div class="info-icon"></div>
         <h3>Call Us</h3>
         <p><a href="tel:+9779812345678">+977 9812345678</a><br>Mon-Sat, 9am-6pm</p>
     </div>
@@ -270,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_message'])) {
         <p><a href="mailto:hello@bloomify.com">hello@bloomify.com</a><br>We reply within 24 hours</p>
     </div>
     <div class="info-card">
-        <div class="info-icon">💬</div>
+        <div class="info-icon"></div>
         <h3>Live Chat</h3>
         <p>Chat with our team<br>Available 9am-9pm NPT</p>
     </div>
@@ -317,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_message'])) {
     <!-- Map & Hours -->
     <div class="contact-map-box">
         <h2>Find Us Here</h2>
-        <div class="map-placeholder">🗺️</div>
+        <div class="map-placeholder"></div>
         
         <h3 style="color: #2d6a4f; font-size: 1.2rem; margin-bottom: 15px; font-weight: 700;">Opening Hours</h3>
         <ul class="hours-list">
@@ -340,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_message'])) {
         </ul>
         
         <div style="margin-top: 25px; padding: 20px; background: #f0f9f4; border-radius: 12px; border-left: 4px solid #2d6a4f;">
-            <strong style="color: #2d6a4f;">🚚 Same-Day Delivery</strong>
+            <strong style="color: #2d6a4f;">Same-Day Delivery</strong>
             <p style="margin: 8px 0 0; color: #4a5568; font-size: 0.9rem;">Order before 2 PM for same-day delivery within Kathmandu Valley!</p>
         </div>
     </div>

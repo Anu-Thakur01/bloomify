@@ -255,7 +255,7 @@ require_once __DIR__ . '/includes/header.php';
                         <p>Skilled artisans crafting beautiful arrangements</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">🚚</span>
+                        <span class="feature-icon"></span>
                         <h4>Fast Delivery</h4>
                         <p>Same-day delivery to keep your flowers fresh</p>
                     </div>
@@ -271,17 +271,17 @@ require_once __DIR__ . '/includes/header.php';
                 
                 <div class="features-grid">
                     <div class="feature-card">
-                        <span class="feature-icon">🌹</span>
+                        <span class="feature-icon"></span>
                         <h4>Flower Care Tips</h4>
                         <p>Learn how to keep your bouquets fresh longer with expert advice</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">🎨</span>
+                        <span class="feature-icon"></span>
                         <h4>Design Inspiration</h4>
                         <p>Discover creative ways to arrange and display flowers</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">💝</span>
+                        <span class="feature-icon"></span>
                         <h4>Occasion Guides</h4>
                         <p>Find the perfect flowers for every celebration</p>
                     </div>
@@ -318,17 +318,17 @@ require_once __DIR__ . '/includes/header.php';
                 <h3 style="color: #2d6a4f; margin-top: 25px; margin-bottom: 15px;">Open Positions</h3>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <span class="feature-icon">👨‍</span>
+                        <span class="feature-icon">‍</span>
                         <h4>Florist Designer</h4>
                         <p>Create stunning arrangements</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">🚗</span>
+                        <span class="feature-icon"></span>
                         <h4>Delivery Partner</h4>
                         <p>Bring smiles to customers</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">💬</span>
+                        <span class="feature-icon"></span>
                         <h4>Customer Support</h4>
                         <p>Help customers find perfect flowers</p>
                     </div>
@@ -364,7 +364,7 @@ require_once __DIR__ . '/includes/header.php';
                         <p>Special wholesale rates for bulk orders</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">📦</span>
+                        <span class="feature-icon"></span>
                         <h4>Bulk Orders</h4>
                         <p>Large quantity fulfillment with flexibility</p>
                     </div>

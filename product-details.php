@@ -350,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
             <?php endwhile; ?>
         <?php else: ?>
             <div class="no-reviews">
-                <p style="font-size: 3rem; margin-bottom: 10px;">💬</p>
+                <p style="font-size: 3rem; margin-bottom: 10px;"></p>
                 <p>No reviews yet. Be the first to review this product!</p>
             </div>
         <?php endif; ?>

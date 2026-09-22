@@ -155,7 +155,7 @@ $orders = $stmt->get_result();
         <?php endwhile; ?>
     <?php else: ?>
         <div class="empty-orders">
-            <div style="font-size: 5rem; margin-bottom: 20px;">📭</div>
+            <div style="font-size: 5rem; margin-bottom: 20px;"></div>
             <h3>No Orders Yet</h3>
             <p>You haven't placed any orders yet. Start shopping to see your orders here!</p>
             <a href="index.php" class="btn-view" style="width: auto; padding: 14px 35px; font-size: 1.1rem;">Start Shopping</a>
